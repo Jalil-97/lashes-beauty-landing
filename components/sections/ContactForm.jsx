@@ -61,6 +61,12 @@ export default function ContactForm({ preselectedCourse }) {
 
   const isEmailValid = (v) => /^\S+@\S+\.\S+$/.test(v.trim())
 
+  const isWhatsappValid = (v) => {
+    if (!/^[+\d\s-]+$/.test(v.trim())) return false
+    const digits = v.replace(/\D/g, '').length
+    return digits >= 8 && digits <= 15
+  }
+
   function validateStep1() {
     const e = {}
     if (!nombre.trim()) e.nombre = 'Ingresá tu nombre'
@@ -68,6 +74,7 @@ export default function ContactForm({ preselectedCourse }) {
     if (!email.trim()) e.email = 'Ingresá tu email'
     else if (!isEmailValid(email)) e.email = 'Ingresá un email válido'
     if (!whatsapp.trim()) e.whatsapp = 'Ingresá tu WhatsApp'
+    else if (!isWhatsappValid(whatsapp)) e.whatsapp = 'Ingresá un número de WhatsApp válido (ej: 1130001234 o +5491130001234)'
     setErrors(e)
     return Object.keys(e).length === 0
   }
