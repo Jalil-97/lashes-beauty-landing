@@ -11,6 +11,7 @@ import Salon from '@/components/sections/Salon'
 import Testimonials from '@/components/sections/Testimonials'
 import FAQ from '@/components/sections/FAQ'
 import ContactForm from '@/components/sections/ContactForm'
+import FadeIn from '@/components/ui/FadeIn'
 
 export default function Home() {
   const [preselectedCourse, setPreselectedCourse] = useState('')
@@ -19,14 +20,14 @@ export default function Home() {
     <>
       <Header />
       <main>
-        <Hero />
-        <CredentialsBar />
-        <About />
-        <Courses onPreselect={setPreselectedCourse} />
-        <Salon />
-        <Testimonials />
-        <FAQ />
-        <ContactForm preselectedCourse={preselectedCourse} />
+        <FadeIn><Hero /></FadeIn>
+        <FadeIn><CredentialsBar /></FadeIn>
+        <FadeIn><About /></FadeIn>
+        <FadeIn><Courses onPreselect={setPreselectedCourse} /></FadeIn>
+        <FadeIn><Salon /></FadeIn>
+        <FadeIn><Testimonials /></FadeIn>
+        <FadeIn><FAQ /></FadeIn>
+        <FadeIn><ContactForm preselectedCourse={preselectedCourse} /></FadeIn>
       </main>
       <Footer />
     </>

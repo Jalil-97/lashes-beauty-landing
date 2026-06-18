@@ -10,7 +10,6 @@ export default function Hero() {
         </p>
         <div className="hero-btns">
           <a href="#s-courses" className="btn btn-p">Ver Cursos</a>
-          <a href="#s-form"    className="btn btn-s">Asesoría Gratuita</a>
         </div>
       </div>
 

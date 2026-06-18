@@ -66,7 +66,10 @@ export default function Salon() {
         </div>
         <div className="map-wrapper">
           <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3286.4!2d-58.5590!3d-34.5290!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzTCsDMxJzQ0LjQiUyA1OMKwMzMnMzIuNCJX!5e0!3m2!1ses!2sar!4v1700000000000!5m2!1ses!2sar"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2394.3250832565745!2d-58.55322521893839!3d-34.53996913912282!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bcb0a972808d73%3A0x385f1d1b5cb9b40b!2sCharlone%205224%2C%20B1653%20Villa%20Ballester%2C%20Provincia%20de%20Buenos%20Aires!5e0!3m2!1ses-419!2sar!4v1781805100185!5m2!1ses-419!2sar"
+            width="100%"
+            height="450"
+            style={{ border: 0 }}
             allowFullScreen
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
