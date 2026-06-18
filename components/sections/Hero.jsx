@@ -8,8 +8,63 @@ export default function Hero() {
           Aprendé las técnicas más avanzadas en extensiones de pestañas. Certificaciones de
           prestigio, metodología práctica y formación dictada por una referente internacional del sector.
         </p>
+        <style>{`
+          .ig-hero-btn-wrap { position: relative; display: inline-flex; align-self: center; }
+          .ig-hero-tip {
+            position: absolute;
+            bottom: calc(100% + 10px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1A1A1C;
+            border: 1px solid rgba(247,168,184,0.25);
+            color: #F7A8B8;
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            white-space: nowrap;
+            padding: 7px 12px;
+            border-radius: 4px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 200ms ease;
+          }
+          .ig-hero-tip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: #1A1A1C;
+          }
+          .ig-hero-btn-wrap:hover .ig-hero-tip { opacity: 1; }
+        `}</style>
         <div className="hero-btns">
           <a href="#s-courses" className="btn btn-p">Ver Cursos</a>
+          <span className="ig-hero-btn-wrap">
+            <a
+              className="ig-hero-btn"
+              href="https://instagram.com/lashes.beautyok"
+              target="_blank"
+              rel="noopener"
+              aria-label="Ver nuestro trabajo en Instagram"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '13px 16px',
+                borderRadius: '4px',
+                border: '1px solid rgba(247,168,184,0.35)',
+                background: 'transparent',
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F7A8B8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="2" width="20" height="20" rx="5" />
+                <circle cx="12" cy="12" r="4.5" />
+                <circle cx="17.5" cy="6.5" r="0.5" fill="#F7A8B8" stroke="none" />
+              </svg>
+            </a>
+            <span className="ig-hero-tip">VER NUESTRO TRABAJO</span>
+          </span>
         </div>
       </div>
 
