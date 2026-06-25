@@ -37,7 +37,6 @@ export default function ContactForm({ preselectedCourse }) {
 
   // Paso 3
   const [payMethod, setPayMethod] = useState('')
-  const [plan, setPlan] = useState('full')
   const [terms, setTerms] = useState(false)
 
   useEffect(() => {
@@ -323,28 +322,7 @@ export default function ContactForm({ preselectedCourse }) {
                   </div>
                   {fieldError('payMethod')}
                 </div>
-                <div className="fg">
-                  <label>Plan de pago</label>
-                  <div className="radio-group" id="plan-group">
-                    <div
-                      className={`radio-opt${plan === 'full' ? ' sel' : ''}`}
-                      onClick={() => setPlan('full')}
-                    >
-                      <input type="radio" name="plan" readOnly checked={plan === 'full'} />
-                      <div className="r-dot" />
-                      <div><h5>Pago completo</h5><p>$XXX</p></div>
-                    </div>
-                    <div
-                      className={`radio-opt${plan === 'cuotas' ? ' sel' : ''}`}
-                      onClick={() => setPlan('cuotas')}
-                    >
-                      <input type="radio" name="plan" readOnly checked={plan === 'cuotas'} />
-                      <div className="r-dot" />
-                      <div><h5>Cuotas</h5><p>X × $XXX</p></div>
-                    </div>
-                  </div>
-                </div>
-                <div className="summary-box">
+<div className="summary-box">
                   <div className="summary-row"><span>Curso</span><span>{curso || '—'}</span></div>
                   <div className="summary-row"><span>Modalidad</span><span>{getModalidad(curso) || '—'}</span></div>
                   <div className="summary-row"><span>Total</span><span>$XXX</span></div>
