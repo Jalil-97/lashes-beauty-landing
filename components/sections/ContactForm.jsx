@@ -8,6 +8,15 @@ const PAY_LABELS = {
   cash: 'Efectivo',
 }
 
+const COURSE_INFO = {
+  'De Cero a Lash Artist': { modalidad: 'Híbrido', nota: 'Apto para principiantes' },
+  'Lifting Coreano': { modalidad: 'Presencial', nota: 'Requiere conocimientos previos' },
+}
+
+function getModalidad(curso) {
+  return COURSE_INFO[curso]?.modalidad || ''
+}
+
 export default function ContactForm({ preselectedCourse }) {
   const [step, setStep] = useState(1)
   const [submitted, setSubmitted] = useState(false)
@@ -25,7 +34,6 @@ export default function ContactForm({ preselectedCourse }) {
   // Paso 2
   const [curso, setCurso] = useState('')
   const [nivel, setNivel] = useState('')
-  const [modalidad, setModalidad] = useState('')
 
   // Paso 3
   const [payMethod, setPayMethod] = useState('')
@@ -75,7 +83,8 @@ export default function ContactForm({ preselectedCourse }) {
     const e = {}
     if (!curso) e.curso = 'Elegí un curso'
     if (!nivel) e.nivel = 'Elegí tu nivel actual'
-    if (!modalidad) e.modalidad = 'Elegí una modalidad'
+    else if (curso === 'Lifting Coreano' && nivel === 'Principiante')
+      e.nivel = 'Este curso requiere conocimientos previos. Te recomendamos comenzar con De Cero a Lash Artist.'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -120,7 +129,7 @@ export default function ContactForm({ preselectedCourse }) {
           comoNosConociste: origen,
           curso,
           nivel,
-          modalidad,
+          modalidad: getModalidad(curso),
           metodoPago: PAY_LABELS[payMethod] || payMethod,
         }),
       })
@@ -159,7 +168,7 @@ export default function ContactForm({ preselectedCourse }) {
             <div className="success-detail">
               <div className="sd-row"><span>Nombre</span><span>{`${nombre} ${apellido}`.trim() || '—'}</span></div>
               <div className="sd-row"><span>Curso</span><span>{curso || '—'}</span></div>
-              <div className="sd-row"><span>Modalidad</span><span>{modalidad || '—'}</span></div>
+              <div className="sd-row"><span>Modalidad</span><span>{getModalidad(curso) || '—'}</span></div>
             </div>
             <p className="success-note">
               Revisá tu WhatsApp — te llegará confirmación dentro de las próximas horas.
@@ -265,55 +274,26 @@ export default function ContactForm({ preselectedCourse }) {
                   <label>Curso de interés</label>
                   <select className="fc" value={curso} onChange={e => { setCurso(e.target.value); clearError('curso') }}>
                     <option value="">Seleccioná un curso</option>
-                    <option value="Curso Inicial Completo">Curso Inicial Completo</option>
-                    <option value="Perfeccionamiento y Mapping">Perfeccionamiento y Mapping</option>
-                    <option value="Especialización Volumen Ruso">Especialización Volumen Ruso</option>
+                    <option value="De Cero a Lash Artist">De Cero a Lash Artist</option>
+                    <option value="Lifting Coreano">Lifting Coreano</option>
                   </select>
                   {fieldError('curso')}
+                  {curso && COURSE_INFO[curso] && (
+                    <div style={{ marginTop: '8px', color: '#A3A3A8', fontSize: '0.82rem', lineHeight: '1.6' }}>
+                      <div>Modalidad: {COURSE_INFO[curso].modalidad}</div>
+                      <div>{COURSE_INFO[curso].nota}</div>
+                    </div>
+                  )}
                 </div>
                 <div className="fg">
                   <label>Tu nivel actual</label>
-                  <div className="radio-group" id="nivel-group">
-                    <div
-                      className={`radio-opt${nivel === 'Principiante' ? ' sel' : ''}`}
-                      onClick={() => { setNivel('Principiante'); clearError('nivel') }}
-                    >
-                      <input type="radio" name="nivel" readOnly checked={nivel === 'Principiante'} />
-                      <div className="r-dot" />
-                      <div><h5>Principiante</h5><p>Sin experiencia previa</p></div>
-                    </div>
-                    <div
-                      className={`radio-opt${nivel === 'Lashista activa' ? ' sel' : ''}`}
-                      onClick={() => { setNivel('Lashista activa'); clearError('nivel') }}
-                    >
-                      <input type="radio" name="nivel" readOnly checked={nivel === 'Lashista activa'} />
-                      <div className="r-dot" />
-                      <div><h5>Lashista activa</h5><p>Busco perfeccionamiento</p></div>
-                    </div>
-                  </div>
+                  <select className="fc" value={nivel} onChange={e => { setNivel(e.target.value); clearError('nivel') }}>
+                    <option value="">Seleccioná tu nivel</option>
+                    <option value="Principiante">Principiante</option>
+                    <option value="Tengo algo de experiencia">Tengo algo de experiencia</option>
+                    <option value="Avanzada">Avanzada</option>
+                  </select>
                   {fieldError('nivel')}
-                </div>
-                <div className="fg">
-                  <label>Modalidad preferida</label>
-                  <div className="radio-group" id="mod-group">
-                    <div
-                      className={`radio-opt${modalidad === 'Presencial' ? ' sel' : ''}`}
-                      onClick={() => { setModalidad('Presencial'); clearError('modalidad') }}
-                    >
-                      <input type="radio" name="mod" readOnly checked={modalidad === 'Presencial'} />
-                      <div className="r-dot" />
-                      <div><h5>Presencial</h5><p>Villa Ballester</p></div>
-                    </div>
-                    <div
-                      className={`radio-opt${modalidad === 'Híbrido' ? ' sel' : ''}`}
-                      onClick={() => { setModalidad('Híbrido'); clearError('modalidad') }}
-                    >
-                      <input type="radio" name="mod" readOnly checked={modalidad === 'Híbrido'} />
-                      <div className="r-dot" />
-                      <div><h5>Híbrido</h5><p>Online + presencial</p></div>
-                    </div>
-                  </div>
-                  {fieldError('modalidad')}
                 </div>
                 <div className="nav-btns">
                   <button className="btn btn-s" style={{ flex: 1 }} onClick={() => goStep(1)}>← Volver</button>
@@ -366,7 +346,7 @@ export default function ContactForm({ preselectedCourse }) {
                 </div>
                 <div className="summary-box">
                   <div className="summary-row"><span>Curso</span><span>{curso || '—'}</span></div>
-                  <div className="summary-row"><span>Modalidad</span><span>{modalidad || '—'}</span></div>
+                  <div className="summary-row"><span>Modalidad</span><span>{getModalidad(curso) || '—'}</span></div>
                   <div className="summary-row"><span>Total</span><span>$XXX</span></div>
                 </div>
                 <div className="cb">
