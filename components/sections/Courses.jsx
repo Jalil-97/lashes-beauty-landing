@@ -30,7 +30,7 @@ const COURSES = [
     badge: { label: 'Presencial', style: {} },
     image: '/images/curso-korean-lift.jpg',
     imgPlaceholder: 'Korean Lift',
-    tags: ['Presencial'],
+    tags: ['Presencial', 'Avanzadas'],
     title: 'Korean Lift — Técnica Coreana',
     desc: 'La técnica que está redefiniendo el mercado. Incorporá a tu estudio un método que combina precisión, seguridad y resultados de alta demanda, y posicioná tu servicio en el segmento premium de 2026.',
     details: [
@@ -86,9 +86,9 @@ export default function Courses({ onPreselect }) {
         ))}
       </div>
 
-      <div className="courses" id="courses-grid" style={{ justifyContent: 'center' }}>
+      <div className="courses" id="courses-grid" style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '24px' }}>
         {visible.map(course => (
-          <div className="cc" key={course.id} style={{ maxWidth: '380px', width: '100%' }}>
+          <div className="cc" key={course.id} style={{ maxWidth: '400px', width: '100%' }}>
             {course.badge && (
               <span className="cc-badge" style={course.badge.style}>{course.badge.label}</span>
             )}
@@ -110,14 +110,15 @@ export default function Courses({ onPreselect }) {
               <p className="cd">{course.desc}</p>
               <div className="cc-details">
                 {course.details.map(d => (
-                  <div key={d.label} className="di">
-                    <strong>{d.value}</strong>{d.label}
+                  <div key={d.label} className="di" style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <span style={{ fontSize: '0.7rem', color: '#A3A3A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{d.label}</span>
+                    <strong>{d.value}</strong>
                   </div>
                 ))}
               </div>
               {course.nextDates && (
                 <div style={{ fontSize: '0.8rem', color: '#A3A3A8', margin: '10px 0 6px' }}>
-                  <span>📅 Próxima fecha: {course.nextDates}</span>
+                  <span>📅 Próximas fechas: {course.nextDates}</span>
                   {course.cupos && <span style={{ marginLeft: '12px' }}>👥 {course.cupos} cupos</span>}
                 </div>
               )}
@@ -126,11 +127,11 @@ export default function Courses({ onPreselect }) {
                   Precio de lanzamiento
                 </div>
                 {course.priceOld && (
-                  <span style={{ textDecoration: 'line-through', color: '#A3A3A8', fontSize: '15px', display: 'block', marginBottom: '3px' }}>
+                  <span style={{ textDecoration: 'line-through', color: '#A3A3A8', fontSize: '16px', display: 'block', marginBottom: '3px' }}>
                     {course.priceOld}
                   </span>
                 )}
-                <span className="amt" style={{ fontSize: '22px', fontWeight: '600' }}>{course.price}</span>
+                <span className="amt" style={{ fontSize: '28px', fontWeight: '700', color: '#F7A8B8' }}>{course.price}</span>
               </div>
               <button
                 className={`btn ${course.btnClass} btn-full`}

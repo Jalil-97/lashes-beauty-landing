@@ -36,7 +36,6 @@ export default function About() {
             </div>
             <div className="ach">
               <div className="num">Formadora Internacional</div>
-              <div className="ttl">Jueza y Formadora</div>
               <div className="dsc">He capacitado a más de 500 lash artists, combinando estándares de competencia internacional con una metodología práctica y accesible.</div>
             </div>
           </div>

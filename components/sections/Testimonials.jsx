@@ -1,8 +1,8 @@
 const TESTIMONIALS = [
-  { initials: 'CA', name: '[Nombre Alumna]', course: 'Egresada Curso Inicial · [Ciudad]' },
-  { initials: 'LM', name: '[Nombre Alumna]', course: 'Egresada Volumen Ruso · [Ciudad]' },
-  { initials: 'VP', name: '[Nombre Alumna]', course: 'Egresada Mapping · [Ciudad]' },
-  { initials: 'RS', name: '[Nombre Alumna]', course: 'Egresada Curso Inicial · [Ciudad]' },
+  { initials: 'CA', name: '[Nombre Alumna]', course: 'De Cero a Lash Artist · [Ciudad]' },
+  { initials: 'LM', name: '[Nombre Alumna]', course: 'De Cero a Lash Artist · [Ciudad]' },
+  { initials: 'VP', name: '[Nombre Alumna]', course: 'Korean Lift — Técnica Coreana · [Ciudad]' },
+  { initials: 'RS', name: '[Nombre Alumna]', course: 'Korean Lift — Técnica Coreana · [Ciudad]' },
 ]
 
 export default function Testimonials() {

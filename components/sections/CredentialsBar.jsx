@@ -9,11 +9,9 @@ const ALL = [...ITEMS, ...ITEMS]
 
 export default function CredentialsBar() {
   return (
-    <section className="cred">
+    <section className="cred" style={{ overflow: 'hidden', width: '100%', padding: '0' }}>
       <style>{`
-        section.cred { padding-left: 0; padding-right: 0; overflow: hidden; }
-        .cred-ticker-wrap { overflow: hidden; width: 100%; }
-        .cred-ticker {
+        .cred-track {
           display: flex;
           align-items: center;
           width: max-content;
@@ -24,7 +22,7 @@ export default function CredentialsBar() {
           100% { transform: translateX(-50%); }
         }
         @media (prefers-reduced-motion: reduce) {
-          .cred-ticker {
+          .cred-track {
             animation: none;
             flex-wrap: wrap;
             width: 100%;
@@ -32,8 +30,8 @@ export default function CredentialsBar() {
           }
         }
       `}</style>
-      <div className="cred-ticker-wrap">
-        <div className="cred-ticker">
+      <div style={{ overflow: 'hidden', width: '100%' }}>
+        <div className="cred-track">
           {ALL.map((item, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
               <div className="cred-item" style={{ flexShrink: 0 }}>
