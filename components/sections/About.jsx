@@ -3,10 +3,16 @@ export default function About() {
     <section className="section" id="s-about">
       <div className="about-grid">
         <div className="about-photo">
-          <div className="mono">MS</div>
+          <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '8px', minHeight: '300px', background: '#2C2C2F', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
+            <span style={{ color: '#A3A3A8', fontSize: '0.85rem', position: 'absolute', zIndex: 0 }}>Foto de Micaela</span>
+            <img
+              src="/images/about-mica.jpg"
+              alt="Micaela Sala"
+              style={{ position: 'relative', zIndex: 1, width: '100%', objectFit: 'cover', display: 'block', minHeight: '300px' }}
+            />
+          </div>
           <h3>Micaela Sala</h3>
           <p className="role">Lash Artist · Educadora · Jueza Internacional<br />Villa Ballester, Buenos Aires</p>
-          <div className="ph-label">[ Foto profesional — retrato en estudio ]</div>
         </div>
 
         <div className="about-r">
@@ -29,9 +35,9 @@ export default function About() {
               <div className="dsc">El primer evento argentino que convocó a referentes internacionales de la industria para elevar el estándar profesional de las lash artists de la región.</div>
             </div>
             <div className="ach">
-              <div className="num">Speaker Int.</div>
+              <div className="num">Formadora Internacional</div>
               <div className="ttl">Jueza y Formadora</div>
-              <div className="dsc">Speaker internacional, jueza y formadora.</div>
+              <div className="dsc">He capacitado a más de 500 lash artists, combinando estándares de competencia internacional con una metodología práctica y accesible.</div>
             </div>
           </div>
         </div>

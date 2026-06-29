@@ -183,7 +183,7 @@ export default function ContactForm({ preselectedCourse }) {
       <div className="sec-hd">
         <div className="tag tag-center">Inscripción</div>
         <h2>Reservá tu <em>lugar</em></h2>
-        <p>Cupos limitados — máximo 4 alumnas por fecha para atención 100% personalizada.</p>
+        <p>Cupos limitados — trabajamos con grupos exclusivos de hasta 6 alumnas para asegurar una experiencia más personalizada.</p>
       </div>
 
       <div className="form-wrap">

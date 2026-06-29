@@ -21,7 +21,7 @@ const COURSES = [
     nextDates: '27 de julio',
     cupos: 6,
     price: '$399.999',
-    priceOld: '$499.999',
+    priceOld: '$444.443',
     btnClass: 'btn-p',
   },
   {
@@ -42,7 +42,7 @@ const COURSES = [
     nextDates: '25 de julio · 1 de agosto',
     cupos: 6,
     price: '$129.999',
-    priceOld: '$161.999',
+    priceOld: '$144.443',
     btnClass: 'btn-s',
   },
 ]
@@ -86,9 +86,9 @@ export default function Courses({ onPreselect }) {
         ))}
       </div>
 
-      <div className="courses" id="courses-grid">
+      <div className="courses" id="courses-grid" style={{ justifyContent: 'center' }}>
         {visible.map(course => (
-          <div className="cc" key={course.id}>
+          <div className="cc" key={course.id} style={{ maxWidth: '380px', width: '100%' }}>
             {course.badge && (
               <span className="cc-badge" style={course.badge.style}>{course.badge.label}</span>
             )}
@@ -122,12 +122,15 @@ export default function Courses({ onPreselect }) {
                 </div>
               )}
               <div className="cc-price">
+                <div style={{ color: '#C5A880', fontSize: '0.7rem', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '5px' }}>
+                  Precio de lanzamiento
+                </div>
                 {course.priceOld && (
-                  <span style={{ textDecoration: 'line-through', color: '#A3A3A8', fontSize: '0.82rem', display: 'block', marginBottom: '2px' }}>
+                  <span style={{ textDecoration: 'line-through', color: '#A3A3A8', fontSize: '15px', display: 'block', marginBottom: '3px' }}>
                     {course.priceOld}
                   </span>
                 )}
-                <span className="amt">{course.price}</span>
+                <span className="amt" style={{ fontSize: '22px', fontWeight: '600' }}>{course.price}</span>
               </div>
               <button
                 className={`btn ${course.btnClass} btn-full`}
