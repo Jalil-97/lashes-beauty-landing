@@ -1,51 +1,29 @@
 'use client'
 
 import { useState } from 'react'
+import { CURSOS } from '@/lib/cursos'
 
-const COURSES = [
-  {
-    id: 1,
-    cat: ['ini', 'onl'],
-    badge: { label: 'Principiantes', style: {} },
-    image: '/images/curso-lash-artist.jpg',
-    imgPlaceholder: 'De Cero a Lash Artist',
-    tags: ['Híbrido', 'Principiantes'],
-    title: 'De Cero a Lash Artist',
-    desc: 'Una mentoría integral diseñada para quienes quieren construir una carrera profesional en extensiones de pestañas desde cero. En tres meses, sin experiencia previa, vas a desarrollar la técnica, el criterio y la confianza de una verdadera Lash Artist.',
-    details: [
-      { value: '3 meses · 8 clases virtuales + 4 prácticas presenciales', label: 'Duración' },
-      { value: 'Villa Ballester', label: 'Sede' },
-      { value: 'Incluido en prácticas', label: 'Material' },
-      { value: 'Certificado por módulo y final', label: 'Título' },
-    ],
-    nextDates: '27 de julio',
-    cupos: 6,
-    price: '$399.999',
-    priceOld: '$444.443',
-    btnClass: 'btn-p',
-  },
-  {
-    id: 2,
-    cat: ['adv'],
-    badge: { label: 'Presencial', style: {} },
-    image: '/images/curso-korean-lift.jpg',
-    imgPlaceholder: 'Korean Lift',
-    tags: ['Presencial', 'Avanzadas'],
-    title: 'Korean Lift — Técnica Coreana',
-    desc: 'La técnica que está redefiniendo el mercado. Incorporá a tu estudio un método que combina precisión, seguridad y resultados de alta demanda, y posicioná tu servicio en el segmento premium de 2026.',
-    details: [
-      { value: '1 día · Teoría + práctica', label: 'Duración' },
-      { value: 'Villa Ballester', label: 'Sede' },
-      { value: 'Incluido', label: 'Material' },
-      { value: 'Certificado de asistencia', label: 'Título' },
-    ],
-    nextDates: '25 de julio · 1 de agosto',
-    cupos: 6,
-    price: '$129.999',
-    priceOld: '$144.443',
-    btnClass: 'btn-s',
-  },
-]
+const COURSES = CURSOS.map(c => ({
+  id: c.id,
+  cat: c.filtros,
+  badge: { label: c.nivelRequerido === 'principiante' ? 'Principiantes' : 'Presencial', style: {} },
+  image: c.imagen,
+  imgPlaceholder: c.nombre,
+  tags: [c.modalidad, c.nivel],
+  title: c.nombre,
+  desc: c.descripcion,
+  details: [
+    { value: c.duracion, label: 'Duración' },
+    { value: c.sede, label: 'Sede' },
+    { value: c.material, label: 'Material' },
+    { value: c.certificacion, label: 'Título' },
+  ],
+  nextDates: c.fechas,
+  cupos: c.cupos,
+  price: '$' + c.precio.toLocaleString('es-AR'),
+  priceOld: '$' + c.precioTachado.toLocaleString('es-AR'),
+  btnClass: c.nivelRequerido === 'principiante' ? 'btn-p' : 'btn-s',
+}))
 
 const FILTERS = [
   { key: 'all', label: 'Todos' },

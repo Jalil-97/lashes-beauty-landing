@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { CURSOS } from '@/lib/cursos'
 
 const PAY_LABELS = {
   card: 'Tarjeta / MP',
@@ -8,13 +9,12 @@ const PAY_LABELS = {
   cash: 'Efectivo',
 }
 
-const COURSE_INFO = {
-  'De Cero a Lash Artist': { modalidad: 'Híbrido', nota: 'Apto para principiantes' },
-  'Lifting Coreano': { modalidad: 'Presencial', nota: 'Requiere conocimientos previos' },
+function getCurso(nombre) {
+  return CURSOS.find(c => c.nombre === nombre)
 }
 
-function getModalidad(curso) {
-  return COURSE_INFO[curso]?.modalidad || ''
+function getModalidad(nombre) {
+  return getCurso(nombre)?.modalidad || ''
 }
 
 export default function ContactForm({ preselectedCourse }) {
@@ -82,7 +82,7 @@ export default function ContactForm({ preselectedCourse }) {
     const e = {}
     if (!curso) e.curso = 'Elegí un curso'
     if (!nivel) e.nivel = 'Elegí tu nivel actual'
-    else if (curso === 'Lifting Coreano' && nivel === 'Principiante')
+    else if (getCurso(curso)?.nivelRequerido === 'con-experiencia' && nivel === 'Principiante')
       e.nivel = 'Este curso requiere conocimientos previos. Te recomendamos comenzar con De Cero a Lash Artist.'
     setErrors(e)
     return Object.keys(e).length === 0
@@ -273,14 +273,15 @@ export default function ContactForm({ preselectedCourse }) {
                   <label>Curso de interés</label>
                   <select className="fc" value={curso} onChange={e => { setCurso(e.target.value); clearError('curso') }}>
                     <option value="">Seleccioná un curso</option>
-                    <option value="De Cero a Lash Artist">De Cero a Lash Artist</option>
-                    <option value="Lifting Coreano">Lifting Coreano</option>
+                    {CURSOS.map(c => (
+                      <option key={c.id} value={c.nombre}>{c.nombre}</option>
+                    ))}
                   </select>
                   {fieldError('curso')}
-                  {curso && COURSE_INFO[curso] && (
+                  {curso && getCurso(curso) && (
                     <div style={{ marginTop: '8px', color: '#A3A3A8', fontSize: '0.82rem', lineHeight: '1.6' }}>
-                      <div>Modalidad: {COURSE_INFO[curso].modalidad}</div>
-                      <div>{COURSE_INFO[curso].nota}</div>
+                      <div>Modalidad: {getCurso(curso).modalidad}</div>
+                      <div>{getCurso(curso).labelNivel}</div>
                     </div>
                   )}
                 </div>
@@ -322,10 +323,13 @@ export default function ContactForm({ preselectedCourse }) {
                   </div>
                   {fieldError('payMethod')}
                 </div>
-<div className="summary-box">
+                <div className="summary-box">
                   <div className="summary-row"><span>Curso</span><span>{curso || '—'}</span></div>
                   <div className="summary-row"><span>Modalidad</span><span>{getModalidad(curso) || '—'}</span></div>
-                  <div className="summary-row"><span>Total</span><span>$XXX</span></div>
+                  <div className="summary-row">
+                    <span>Total</span>
+                    <span>{getCurso(curso) ? '$' + getCurso(curso).precio.toLocaleString('es-AR') : '—'}</span>
+                  </div>
                 </div>
                 <div className="cb">
                   <input
