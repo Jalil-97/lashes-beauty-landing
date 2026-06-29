@@ -14,7 +14,7 @@ export default function CredentialsBar() {
       `}</style>
       <div className="cred-item">
         <div className="cred-ico">🏆</div>
-        <div><h5>Campeona</h5><p>Volumen Ruso</p></div>
+        <div><h5>Tri Campeona</h5><p>Volumen Ruso</p></div>
       </div>
       <div className="cred-item">
         <div className="cred-ico">🌎</div>
@@ -22,7 +22,7 @@ export default function CredentialsBar() {
       </div>
       <div className="cred-item">
         <div className="cred-ico">🎓</div>
-        <div><h5>+XXX Alumnas</h5><p>En toda Latinoamérica</p></div>
+        <div><h5>+500 Alumnas</h5><p>En toda Latinoamérica</p></div>
       </div>
       <div className="cred-item">
         <div className="cred-ico">✨</div>

@@ -4,28 +4,28 @@ import { useState } from 'react'
 
 const FAQS = [
   {
-    q: '¿Necesito conocimientos previos para el Curso Inicial?',
-    a: 'No, ninguno. El curso empieza desde cero: anatomía del ojo, aislamiento, salud ocular y prácticas con modelos reales. Llegás sin experiencia y te vas trabajando.',
+    q: '¿Necesito experiencia previa para unirme a la mentoría De Cero a Lash Artist?',
+    a: '[COMPLETAR]',
   },
   {
     q: '¿Cómo funcionan los cursos híbridos?',
-    a: 'Combinan una fase teórica online con videoclases y material descargable, y una fase práctica presencial intensiva en nuestro estudio de Villa Ballester con supervisión directa de Micaela.',
+    a: '[COMPLETAR]',
   },
   {
     q: '¿El certificado tiene validez?',
-    a: 'Sí. Al completar el curso y cumplir los estándares técnicos de la academia, recibís una certificación oficial firmada por Micaela Sala, reconocida en el sector de la estética a nivel nacional.',
+    a: '[COMPLETAR]',
   },
   {
     q: '¿Cuántas alumnas hay por clase?',
-    a: 'Máximo 4 alumnas por fecha de cursada presencial. Esto garantiza atención personalizada y corrección directa de cada técnica durante la práctica.',
+    a: 'Trabajamos con grupos de hasta 6 alumnas para garantizar atención personalizada en cada práctica.',
   },
   {
-    q: '¿Qué incluye el kit del Curso Inicial?',
-    a: 'El kit incluye todo lo necesario para empezar: pestañas, adhesivo profesional, pinzas, parches y materiales de práctica. No necesitás comprar nada adicional para el curso.',
+    q: '¿Qué materiales están incluidos en la formación?',
+    a: '[COMPLETAR]',
   },
   {
     q: '¿Puedo pagar en cuotas?',
-    a: 'Sí. Todos los cursos tienen opción de pago en cuotas. También aceptamos transferencia bancaria, Mercado Pago y efectivo. Podés coordinar la modalidad al momento de reservar tu lugar.',
+    a: '[COMPLETAR]',
   },
 ]
 

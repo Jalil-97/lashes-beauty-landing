@@ -6,30 +6,34 @@ export default function Salon() {
         <div className="salon">
           <div className="salon-l">
             <div className="tag">El Espacio</div>
-            <h2>Un estudio diseñado para la <em>excelencia práctica</em></h2>
+            <h2>Viví una experiencia de <em>aprendizaje profesional</em></h2>
             <p>
-              Nuestra sede en Villa Ballester replica las condiciones de un estudio profesional de
-              alta gama para que tu práctica sea óptima desde el primer día.
+              Aprendé y practicá en un entorno diseñado para desarrollar tu técnica al más alto nivel.
+            </p>
+            <p style={{ marginBottom: '24px' }}>
+              En Lashes Beauty Academy vas a practicar en un espacio equipado con los estándares de un
+              estudio profesional real, para que desde el primer día desarrolles confianza, criterio
+              técnico y experiencia genuina.
             </p>
             <div className="feat">
               <div className="feat-dot">✓</div>
               <div>
-                <h4>Iluminación profesional sin sombras</h4>
-                <p>Aros de luz LED para captar cada detalle de la pestaña natural.</p>
+                <h4>Iluminación de precisión</h4>
+                <p>Iluminación profesional diseñada para que cada detalle de la técnica sea visible y reproducible desde la primera práctica.</p>
               </div>
             </div>
             <div className="feat">
               <div className="feat-dot">✓</div>
               <div>
                 <h4>Camillas ergonómicas premium</h4>
-                <p>Comodidad para el modelo de práctica y postura correcta durante las horas de trabajo.</p>
+                <p>Pensadas para la postura correcta de la alumna y la modelo durante toda la jornada de trabajo.</p>
               </div>
             </div>
             <div className="feat">
               <div className="feat-dot">✓</div>
               <div>
-                <h4>Zona foto con neón "Lashes Beauty"</h4>
-                <p>Aprendé a fotografiar tus trabajos para redes desde el primer día de práctica.</p>
+                <h4>Materiales profesionales incluidos</h4>
+                <p>Materiales y herramientas de marcas líderes del mercado incluidos en cada práctica, para que entrenes con los mismos insumos que vas a usar en tu estudio.</p>
               </div>
             </div>
           </div>

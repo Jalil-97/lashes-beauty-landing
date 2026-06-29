@@ -6,37 +6,43 @@ const COURSES = [
   {
     id: 1,
     cat: ['ini', 'onl'],
-    badge: { label: 'Best Seller', style: {} },
-    imgAlt: '[ Foto: Clase inicial ]',
+    badge: { label: 'Principiantes', style: {} },
+    image: '/images/curso-lash-artist.jpg',
+    imgPlaceholder: 'De Cero a Lash Artist',
     tags: ['Híbrido', 'Principiantes'],
     title: 'De Cero a Lash Artist',
-    desc: 'Desde cero. Técnica clásica, aislamiento perfecto, salud ocular y diseño de mirada. Incluye práctica con modelo real.',
+    desc: 'Una mentoría integral diseñada para quienes quieren construir una carrera profesional en extensiones de pestañas desde cero. En tres meses, sin experiencia previa, vas a desarrollar la técnica, el criterio y la confianza de una verdadera Lash Artist.',
     details: [
-      { value: '[A COMPLETAR]', label: 'Duración' },
+      { value: '3 meses · 8 clases virtuales + 4 prácticas presenciales', label: 'Duración' },
       { value: 'Villa Ballester', label: 'Sede' },
-      { value: 'Kit completo', label: 'Material' },
-      { value: 'Certificación', label: 'Título' },
+      { value: 'Incluido en prácticas', label: 'Material' },
+      { value: 'Certificado por módulo y final', label: 'Título' },
     ],
-    price: '$XXX',
-    installment: 'o X cuotas de $XXX',
+    nextDates: '27 de julio',
+    cupos: 6,
+    price: '$399.999',
+    priceOld: '$499.999',
     btnClass: 'btn-p',
   },
   {
     id: 2,
     cat: ['adv'],
-    badge: null,
-    imgAlt: '[ Foto: Lifting Coreano ]',
+    badge: { label: 'Presencial', style: {} },
+    image: '/images/curso-korean-lift.jpg',
+    imgPlaceholder: 'Korean Lift',
     tags: ['Presencial'],
-    title: 'Lifting Coreano',
-    desc: '[A COMPLETAR]',
+    title: 'Korean Lift — Técnica Coreana',
+    desc: 'La técnica que está redefiniendo el mercado. Incorporá a tu estudio un método que combina precisión, seguridad y resultados de alta demanda, y posicioná tu servicio en el segmento premium de 2026.',
     details: [
-      { value: '[A COMPLETAR]', label: 'Duración' },
+      { value: '1 día · Teoría + práctica', label: 'Duración' },
       { value: 'Villa Ballester', label: 'Sede' },
-      { value: 'Insumos en clase', label: 'Material' },
-      { value: 'Certificación', label: 'Título' },
+      { value: 'Incluido', label: 'Material' },
+      { value: 'Certificado de asistencia', label: 'Título' },
     ],
-    price: '$XXX',
-    installment: 'o X cuotas de $XXX',
+    nextDates: '25 de julio · 1 de agosto',
+    cupos: 6,
+    price: '$129.999',
+    priceOld: '$161.999',
     btnClass: 'btn-s',
   },
 ]
@@ -65,7 +71,7 @@ export default function Courses({ onPreselect }) {
       <div className="sec-hd">
         <div className="tag tag-center">Formaciones</div>
         <h2>Elegí tu <em>nivel</em></h2>
-        <p>Desde principiantes absolutas hasta perfeccionamiento de élite. Presencial, online e híbrido.</p>
+        <p>Comenzá desde cero o llevá tu técnica al siguiente nivel. Encontrá la formación que te va a permitir convertir tu pasión en una carrera profesional rentable.</p>
       </div>
 
       <div className="ftabs">
@@ -86,8 +92,15 @@ export default function Courses({ onPreselect }) {
             {course.badge && (
               <span className="cc-badge" style={course.badge.style}>{course.badge.label}</span>
             )}
-            <div className="cc-img">
-              <span className="ph-txt">{course.imgAlt}</span>
+            <div className="cc-img" style={{ position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', inset: 0, background: '#2C2C2F', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 0 }}>
+                <span style={{ color: '#A3A3A8', fontSize: '0.85rem' }}>{course.imgPlaceholder}</span>
+              </div>
+              <img
+                src={course.image}
+                alt={course.title}
+                style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
             </div>
             <div className="cc-body">
               <div className="mtags">
@@ -102,9 +115,19 @@ export default function Courses({ onPreselect }) {
                   </div>
                 ))}
               </div>
+              {course.nextDates && (
+                <div style={{ fontSize: '0.8rem', color: '#A3A3A8', margin: '10px 0 6px' }}>
+                  <span>📅 Próxima fecha: {course.nextDates}</span>
+                  {course.cupos && <span style={{ marginLeft: '12px' }}>👥 {course.cupos} cupos</span>}
+                </div>
+              )}
               <div className="cc-price">
+                {course.priceOld && (
+                  <span style={{ textDecoration: 'line-through', color: '#A3A3A8', fontSize: '0.82rem', display: 'block', marginBottom: '2px' }}>
+                    {course.priceOld}
+                  </span>
+                )}
                 <span className="amt">{course.price}</span>
-                <span className="installment">{course.installment}</span>
               </div>
               <button
                 className={`btn ${course.btnClass} btn-full`}

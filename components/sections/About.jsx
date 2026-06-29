@@ -17,20 +17,21 @@ export default function About() {
             con los estándares técnicos más exigentes de la industria."
           </p>
           <p className="desc">
-            Como jueza internacional y competidora galardonada, Micaela estructuró los programas
-            de Lashes Beauty Academy para acortar tu curva de aprendizaje y darte criterio
-            técnico impecable desde el primer día.
+            Mi trayectoria como jueza, competidora y educadora me permitió desarrollar una metodología
+            para que aprendas con precisión, sin atajos y sin perder años en prueba y error. Vas a
+            dominar técnicas que realmente transforman resultados y te acompañarán durante toda tu
+            carrera profesional.
           </p>
           <div className="ach-grid">
             <div className="ach">
-              <div className="num">1ra Ed.</div>
+              <div className="num">Creadora</div>
               <div className="ttl">Lashes Beauty Conference</div>
-              <div className="dsc">Congreso internacional organizado en Argentina</div>
+              <div className="dsc">El primer evento argentino que convocó a referentes internacionales de la industria para elevar el estándar profesional de las lash artists de la región.</div>
             </div>
             <div className="ach">
-              <div className="num">Jueza Int.</div>
-              <div className="ttl">Volumen Ruso</div>
-              <div className="dsc">Reconocimiento nacional y latinoamericano</div>
+              <div className="num">Speaker Int.</div>
+              <div className="ttl">Jueza y Formadora</div>
+              <div className="dsc">Speaker internacional, jueza y formadora.</div>
             </div>
           </div>
         </div>

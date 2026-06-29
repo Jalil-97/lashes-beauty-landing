@@ -154,7 +154,7 @@ export default function ContactForm({ preselectedCourse }) {
         <div className="sec-hd">
           <div className="tag tag-center">Inscripción</div>
           <h2>Reservá tu <em>lugar</em></h2>
-          <p>Cupos limitados — máximo 4 alumnas por fecha para atención 100% personalizada.</p>
+          <p>Cupos limitados — trabajamos con grupos exclusivos de hasta 6 alumnas para asegurar una experiencia más personalizada.</p>
         </div>
         <div className="form-wrap">
           <div className="success-screen">
@@ -198,7 +198,7 @@ export default function ContactForm({ preselectedCourse }) {
                 disponibilidad y coordinar el pago.
               </p>
               <div className="urgency">
-                <p>⚡ Quedan <strong>X lugares</strong> disponibles para el próximo turno presencial</p>
+                <p>⚡ Quedan <strong>3 lugares</strong> disponibles para la próxima fecha</p>
               </div>
             </div>
           </div>
