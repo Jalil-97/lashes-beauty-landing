@@ -9,7 +9,7 @@ const ALL = [...ITEMS, ...ITEMS]
 
 export default function CredentialsBar() {
   return (
-    <section className="cred" style={{ overflow: 'hidden', width: '100%', padding: '0' }}>
+    <section style={{ overflow: 'hidden', width: '100%', padding: '20px 0', background: '#1A1A1C', borderTop: '0.5px solid #2C2C2F', borderBottom: '0.5px solid #2C2C2F' }}>
       <style>{`
         .cred-track {
           display: flex;

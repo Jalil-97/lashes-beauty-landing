@@ -30,8 +30,7 @@ export default function About() {
           </p>
           <div className="ach-grid">
             <div className="ach">
-              <div className="num">Creadora</div>
-              <div className="ttl">Lashes Beauty Conference</div>
+              <div className="num">Creadora<br />Lashes Beauty Conference</div>
               <div className="dsc">El primer evento argentino que convocó a referentes internacionales de la industria para elevar el estándar profesional de las lash artists de la región.</div>
             </div>
             <div className="ach">
