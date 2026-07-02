@@ -1,6 +1,6 @@
 import { Resend } from 'resend'
 
-const FROM_EMAIL = 'onboarding@resend.dev'
+const FROM_EMAIL = 'Lashes Beauty Academy <inscripciones@lashesbeautyok.com>'
 
 // Escapa valores del usuario antes de interpolarlos en el HTML del email.
 function esc(value) {
@@ -74,7 +74,7 @@ export async function POST(request) {
     const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: process.env.TO_EMAIL,
-      subject: `Nueva inscripción — ${nombre} ${apellido ?? ''}`.trim(),
+      subject: `${curso} — ${nombre} ${apellido ?? ''}`.trim(),
       html,
     })
 
