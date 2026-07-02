@@ -7,12 +7,13 @@ const TARGET = new Date('2026-07-15T03:00:00Z')
 
 function getTimeLeft() {
   const diff = TARGET - Date.now()
-  if (diff <= 0) return { days: 0, hours: 0, minutes: 0 }
+  if (diff <= 0) return { days: 0, hours: 0, minutes: 0, secs: 0 }
   const totalSeconds = Math.floor(diff / 1000)
+  const secs = Math.floor((diff % (1000 * 60)) / 1000)
   const minutes = Math.floor(totalSeconds / 60) % 60
   const hours = Math.floor(totalSeconds / 3600) % 24
   const days = Math.floor(totalSeconds / 86400)
-  return { days, hours, minutes }
+  return { days, hours, minutes, secs }
 }
 
 function pad(n) {
@@ -55,6 +56,9 @@ export default function Proximamente() {
       <style>{`
         @media (max-width: 480px) {
           .prox-title { font-size: 28px !important; }
+        }
+        a[aria-label="Contactar por WhatsApp"].fixed {
+          display: none !important;
         }
       `}</style>
 
@@ -120,8 +124,8 @@ export default function Proximamente() {
             margin: 0,
           }}>
             Lashes Beauty Academy está preparando su nueva plataforma, donde vas a encontrar
-            toda la información sobre nuestras formaciones y vas a poder inscribirte de forma
-            rápida y simple.
+            toda la información sobre nuestras formaciones y poder inscribirte de forma
+            segura, rápida y simple.
           </p>
 
           {/* Countdown */}
@@ -131,6 +135,8 @@ export default function Proximamente() {
             <CountBlock value={pad(timeLeft.hours)} label="HORAS" />
             <span style={{ color: '#444', fontSize: '26px', fontWeight: 600, paddingBottom: '18px' }}>:</span>
             <CountBlock value={pad(timeLeft.minutes)} label="MIN" />
+            <span style={{ color: '#444', fontSize: '26px', fontWeight: 600, paddingBottom: '18px' }}>:</span>
+            <CountBlock value={pad(timeLeft.secs)} label="SEG" />
           </div>
 
           {/* Social icons */}
