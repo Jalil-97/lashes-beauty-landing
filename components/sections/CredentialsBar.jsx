@@ -5,7 +5,7 @@ const ITEMS = [
   { ico: '✨', title: 'Modalidad Híbrida', sub: 'Presencial + Online' },
 ]
 
-const ALL = [...ITEMS, ...ITEMS]
+const ALL = [...ITEMS, ...ITEMS, ...ITEMS]
 
 export default function CredentialsBar() {
   return (
@@ -19,7 +19,7 @@ export default function CredentialsBar() {
         }
         @keyframes cred-scroll {
           0%   { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
+          100% { transform: translateX(-33.333%); }
         }
         @media (prefers-reduced-motion: reduce) {
           .cred-track {
