@@ -28,12 +28,12 @@ export default function About() {
             dominar técnicas que realmente transforman resultados y te acompañarán durante toda tu
             carrera profesional.
           </p>
-          <div className="ach-grid">
-            <div className="ach">
-              <div className="num">Creadora<br />Lashes Beauty Conference</div>
-              <div className="dsc">El primer evento argentino que convocó a referentes internacionales de la industria para elevar el estándar profesional de las lash artists de la región.</div>
+          <div className="ach-grid" style={{ alignItems: 'stretch' }}>
+            <div className="ach" style={{ height: '100%' }}>
+              <div className="num">Lashes Beauty Conference</div>
+              <div className="dsc">Creadora del primer evento argentino que convocó a referentes internacionales de la industria para elevar el estándar profesional de las lash artists de la región.</div>
             </div>
-            <div className="ach">
+            <div className="ach" style={{ height: '100%' }}>
               <div className="num">Formadora Internacional</div>
               <div className="dsc">He capacitado a más de 500 lash artists, combinando estándares de competencia internacional con una metodología práctica y accesible.</div>
             </div>

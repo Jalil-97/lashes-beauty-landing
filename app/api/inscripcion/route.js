@@ -53,6 +53,10 @@ export async function POST(request) {
     )
   }
 
+  const waNumber = `549${String(whatsapp ?? '').replace(/\D/g, '')}`
+  const waText = encodeURIComponent(`Hola ${nombre}! Recibí tu pre-inscripción: ${curso}. Te contacto para coordinar el pago 🙌`)
+  const waUrl = esc(`https://wa.me/${waNumber}?text=${waText}`)
+
   const html = `
   <div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;color:#0F0F10;">
     <h2 style="font-family:Georgia,serif;color:#0F0F10;">Nueva inscripción — Lashes Beauty Academy</h2>
@@ -67,6 +71,11 @@ export async function POST(request) {
       ${row('Modalidad', modalidad)}
       ${row('Método de pago', metodoPago)}
     </table>
+    <div style="text-align:center;margin-top:28px;">
+      <a href="${waUrl}" style="display:inline-block;background:#25D366;color:#ffffff;font-weight:700;text-decoration:none;padding:14px 28px;border-radius:8px;font-family:Inter,Arial,sans-serif;font-size:15px;">
+        Contactar por WhatsApp →
+      </a>
+    </div>
   </div>`
 
   try {
