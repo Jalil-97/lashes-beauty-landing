@@ -74,7 +74,7 @@ export default function Hero() {
             <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '8px 8px 0 0', height: '140px', background: '#2C2C2F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <span style={{ color: '#A3A3A8', fontSize: '0.85rem', position: 'absolute', zIndex: 0 }}>Foto de Micaela</span>
               <img
-                src="/images/hero-mica.jpg"
+                src="/images/hero-mica.webp"
                 alt="Micaela Sala"
                 style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
               />

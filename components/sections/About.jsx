@@ -6,7 +6,7 @@ export default function About() {
           <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '8px', minHeight: '300px', background: '#2C2C2F', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
             <span style={{ color: '#A3A3A8', fontSize: '0.85rem', position: 'absolute', zIndex: 0 }}>Foto de Micaela</span>
             <img
-              src="/images/about-mica.jpg"
+              src="/images/about-mica.webp"
               alt="Micaela Sala"
               style={{ position: 'relative', zIndex: 1, width: '100%', objectFit: 'cover', display: 'block', minHeight: '300px' }}
             />
