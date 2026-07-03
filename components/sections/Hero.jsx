@@ -76,7 +76,7 @@ export default function Hero() {
               <img
                 src="/images/hero-mica.webp"
                 alt="Micaela Sala"
-                style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', display: 'block' }}
               />
             </div>
             <h3>Micaela Sala</h3>
