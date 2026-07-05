@@ -40,18 +40,33 @@ export default function Salon() {
 
           <div className="salon-gallery">
             <div className="gph main">
+              <img
+                src="/images/espacio-1.webp"
+                alt="Estudio principal Lashes Beauty Academy"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
+              />
               <div className="gph-cap">
                 <span>Estudio principal</span>
                 <p>Camillas &amp; ambient light</p>
               </div>
             </div>
             <div className="gph">
+              <img
+                src="/images/espacio-2.webp"
+                alt="Macro close-up extensión"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
+              />
               <div className="gph-cap">
                 <span>Macro close-up</span>
                 <p>Extensión terminada</p>
               </div>
             </div>
             <div className="gph">
+              <img
+                src="/images/espacio-3.webp"
+                alt="Área de práctica"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
+              />
               <div className="gph-cap">
                 <span>Área de práctica</span>
                 <p>Insumos &amp; camilla beige</p>
