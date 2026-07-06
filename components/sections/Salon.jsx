@@ -1,6 +1,48 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+
+const SLIDES = [
+  {
+    src: '/images/espacio-1.webp',
+    alt: 'Estudio principal Lashes Beauty Academy',
+    title: 'Estudio principal',
+    sub: 'Camillas & ambient light',
+  },
+  {
+    src: '/images/espacio-2.webp',
+    alt: 'El estudio',
+    title: 'El estudio',
+    sub: 'Espacio de práctica profesional',
+  },
+  {
+    src: '/images/espacio-3.webp',
+    alt: 'Resultado real',
+    title: 'Resultado real',
+    sub: 'Trabajo de alumna',
+  },
+]
+
 export default function Salon() {
+  const [active, setActive] = useState(0)
+
+  useEffect(() => {
+    const id = setInterval(() => setActive(i => (i + 1) % SLIDES.length), 4000)
+    return () => clearInterval(id)
+  }, [])
+
+  const slide = SLIDES[active]
+
   return (
     <>
+      <style>{`
+        .salon-carousel { display: none; }
+        @media (max-width: 768px) {
+          .salon-gallery { display: none !important; }
+          .salon-carousel { display: block; }
+        }
+      `}</style>
+
       {/* El Espacio */}
       <section className="section" id="s-space">
         <div className="salon">
@@ -38,6 +80,7 @@ export default function Salon() {
             </div>
           </div>
 
+          {/* Desktop gallery — sin cambios */}
           <div className="salon-gallery">
             <div className="gph main">
               <img
@@ -71,6 +114,41 @@ export default function Salon() {
                 <span>Área de práctica</span>
                 <p>Insumos &amp; camilla beige</p>
               </div>
+            </div>
+          </div>
+
+          {/* Mobile carousel */}
+          <div className="salon-carousel">
+            <div style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', aspectRatio: '4/3' }}>
+              <img
+                key={active}
+                src={slide.src}
+                alt={slide.alt}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }}
+              />
+              <div className="gph-cap">
+                <span>{slide.title}</span>
+                <p>{slide.sub}</p>
+              </div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '12px' }}>
+              {SLIDES.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActive(i)}
+                  aria-label={`Foto ${i + 1}`}
+                  style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'pointer',
+                    background: i === active ? '#F7A8B8' : '#444',
+                    transition: 'background 300ms',
+                  }}
+                />
+              ))}
             </div>
           </div>
         </div>

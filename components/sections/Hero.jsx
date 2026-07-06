@@ -37,6 +37,9 @@ export default function Hero() {
             border-top-color: #1A1A1C;
           }
           .ig-hero-btn-wrap:hover .ig-hero-tip { opacity: 1; }
+          @media (max-width: 768px) {
+            .hero-card-img-wrap { max-height: 160px !important; }
+          }
         `}</style>
         <div className="hero-btns">
           <a href="#s-courses" className="btn btn-p">Ver Formaciones</a>
@@ -71,7 +74,7 @@ export default function Hero() {
       <div className="hero-r">
         <div className="hero-card">
           <div className="hero-card-img">
-            <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '8px 8px 0 0', height: '140px', background: '#2C2C2F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="hero-card-img-wrap" style={{ position: 'relative', overflow: 'hidden', borderRadius: '8px 8px 0 0', height: '140px', background: '#2C2C2F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <span style={{ color: '#A3A3A8', fontSize: '0.85rem', position: 'absolute', zIndex: 0 }}>Foto de Micaela</span>
               <img
                 src="/images/hero-mica.webp"
