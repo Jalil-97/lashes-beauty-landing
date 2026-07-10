@@ -3,8 +3,8 @@ export default function About() {
     <section className="section" id="s-about">
       <style>{`
         @media (max-width: 768px) {
-          .about-photo-img-wrap { max-height: 280px !important; min-height: unset !important; }
-          .about-photo-img-wrap img { min-height: unset !important; height: 280px !important; object-position: top !important; }
+          .about-photo-img-wrap { width: 100% !important; max-height: 300px !important; min-height: unset !important; }
+          .about-photo-img-wrap img { width: 100% !important; height: 300px !important; min-height: unset !important; object-fit: cover !important; object-position: top !important; border-radius: 12px !important; }
         }
       `}</style>
       <div className="about-grid">
