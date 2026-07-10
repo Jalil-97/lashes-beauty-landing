@@ -1,14 +1,20 @@
 export default function About() {
   return (
     <section className="section" id="s-about">
+      <style>{`
+        @media (max-width: 768px) {
+          .about-photo-img-wrap { max-height: 280px !important; min-height: unset !important; }
+          .about-photo-img-wrap img { min-height: unset !important; height: 280px !important; object-position: top !important; }
+        }
+      `}</style>
       <div className="about-grid">
         <div className="about-photo">
-          <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '8px', minHeight: '300px', background: '#2C2C2F', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
+          <div className="about-photo-img-wrap" style={{ position: 'relative', overflow: 'hidden', borderRadius: '8px', minHeight: '300px', background: '#2C2C2F', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
             <span style={{ color: '#A3A3A8', fontSize: '0.85rem', position: 'absolute', zIndex: 0 }}>Foto de Micaela</span>
             <img
               src="/images/about-mica.webp"
               alt="Micaela Sala"
-              style={{ position: 'relative', zIndex: 1, width: '100%', objectFit: 'cover', display: 'block', minHeight: '300px' }}
+              style={{ position: 'relative', zIndex: 1, width: '100%', objectFit: 'cover', objectPosition: 'top', display: 'block', minHeight: '300px' }}
             />
           </div>
           <h3>Micaela Sala</h3>
