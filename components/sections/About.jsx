@@ -2,23 +2,25 @@ export default function About() {
   return (
     <section className="section" id="s-about">
       <style>{`
+        .about-photo-col { width: 42%; flex-shrink: 0; }
+        .about-photo-col .about-photo { width: 100%; }
         @media (max-width: 768px) {
-          .about-photo-img-wrap { width: 100% !important; max-height: 300px !important; min-height: unset !important; }
-          .about-photo-img-wrap img { width: 100% !important; height: 300px !important; min-height: unset !important; object-fit: cover !important; object-position: top !important; border-radius: 12px !important; }
+          .about-photo-col { width: 100%; max-width: 340px; margin: 0 auto; }
         }
       `}</style>
       <div className="about-grid">
-        <div className="about-photo">
-          <div className="about-photo-img-wrap" style={{ position: 'relative', overflow: 'hidden', borderRadius: '8px', minHeight: '300px', background: '#2C2C2F', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
-            <span style={{ color: '#A3A3A8', fontSize: '0.85rem', position: 'absolute', zIndex: 0 }}>Foto de Micaela</span>
+        <div className="about-photo-col">
+          <div className="about-photo">
             <img
               src="/images/about-mica.webp"
               alt="Micaela Sala"
-              style={{ position: 'relative', zIndex: 1, width: '100%', objectFit: 'cover', objectPosition: 'top', display: 'block', minHeight: '300px' }}
+              style={{ objectPosition: 'center top' }}
             />
           </div>
-          <h3>Micaela Sala</h3>
-          <p className="role">Lash Artist · Educadora · Jueza Internacional<br />Villa Ballester, Buenos Aires</p>
+          <h3 style={{ fontSize: '1.6rem', marginTop: '20px', marginBottom: '4px' }}>Micaela Sala</h3>
+          <p style={{ fontSize: '.78rem', color: 'var(--mt)', lineHeight: '1.6' }}>
+            Lash Artist · Educadora · Jueza Internacional<br />Villa Ballester, Buenos Aires
+          </p>
         </div>
 
         <div className="about-r">

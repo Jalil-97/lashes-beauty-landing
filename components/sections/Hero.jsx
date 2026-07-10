@@ -37,9 +37,6 @@ export default function Hero() {
             border-top-color: #1A1A1C;
           }
           .ig-hero-btn-wrap:hover .ig-hero-tip { opacity: 1; }
-          @media (max-width: 768px) {
-            .hero-card-img-wrap { max-height: 240px !important; }
-          }
         `}</style>
         <div className="hero-btns">
           <a href="#s-courses" className="btn btn-p">Ver Formaciones</a>
@@ -73,17 +70,16 @@ export default function Hero() {
 
       <div className="hero-r">
         <div className="hero-card">
-          <div className="hero-card-img">
-            <div className="hero-card-img-wrap" style={{ position: 'relative', overflow: 'hidden', borderRadius: '8px 8px 0 0', height: '280px', background: '#2C2C2F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ color: '#A3A3A8', fontSize: '0.85rem', position: 'absolute', zIndex: 0 }}>Foto de Micaela</span>
-              <img
-                src="/images/hero-mica.webp"
-                alt="Micaela Sala"
-                style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', display: 'block' }}
-              />
-            </div>
-            <h3>Micaela Sala</h3>
-            <p>Lash Artist &amp; Educadora Internacional</p>
+          <div style={{ width: '100%', height: '300px', overflow: 'hidden', borderRadius: '12px 12px 0 0' }}>
+            <img
+              src="/images/hero-mica.webp"
+              alt="Micaela Sala"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }}
+            />
+          </div>
+          <div style={{ padding: '20px 22px', textAlign: 'center' }}>
+            <h3 style={{ fontSize: '1.4rem', marginBottom: '4px' }}>Micaela Sala</h3>
+            <p style={{ fontSize: '0.76rem', color: '#F7A8B8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>Lash Artist &amp; Educadora Internacional</p>
           </div>
         </div>
       </div>
