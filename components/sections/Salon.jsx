@@ -111,8 +111,8 @@ export default function Salon() {
                 style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
               />
               <div className="gph-cap">
-                <span>Área de práctica</span>
-                <p>Insumos &amp; camilla beige</p>
+                <span>Resultado final</span>
+                <p>Trabajo de alumna</p>
               </div>
             </div>
           </div>

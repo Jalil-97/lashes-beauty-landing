@@ -198,7 +198,7 @@ export default function ContactForm({ preselectedCourse }) {
                 disponibilidad y coordinar el pago.
               </p>
               <div className="urgency">
-                <p>⚡ Quedan <strong>3 lugares</strong> disponibles para la próxima fecha</p>
+                <p>⚡ ¡Quedan los últimos lugares disponibles!</p>
               </div>
             </div>
           </div>

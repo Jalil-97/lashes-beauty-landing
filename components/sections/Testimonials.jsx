@@ -1,3 +1,7 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+
 const TESTIMONIOS = [
   {
     foto: '/images/testimonio-1.webp',
@@ -43,19 +47,32 @@ const TESTIMONIOS = [
   },
 ]
 
+const N = TESTIMONIOS.length
+
+function Card({ t }) {
+  return (
+    <div className="t-real-card">
+      <img src={t.foto} alt={`Foto de ${t.nombre}`} />
+      <div className="t-real-body">
+        <p className="t-real-texto">"{t.texto}"</p>
+        <p className="t-real-nombre">{t.nombre}</p>
+        <p className="t-real-curso">{t.curso}</p>
+      </div>
+    </div>
+  )
+}
+
 export default function Testimonials() {
+  const [offset, setOffset] = useState(0)
+
+  useEffect(() => {
+    const id = setInterval(() => setOffset(o => (o + 1) % N), 4000)
+    return () => clearInterval(id)
+  }, [])
+
   return (
     <section className="section" id="s-testimonios">
       <style>{`
-        .t-real-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 24px;
-          justify-items: center;
-        }
-        .t-real-grid > :nth-child(7) {
-          grid-column: 2;
-        }
         .t-real-card {
           background: #1A1A1C;
           border: 0.5px solid #2C2C2F;
@@ -96,13 +113,23 @@ export default function Testimonials() {
           margin: 0;
           letter-spacing: 0.04em;
         }
+        .t-carousel-desktop {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 24px;
+        }
+        .t-carousel-mobile {
+          display: none;
+        }
+        .t-dots {
+          display: flex;
+          justify-content: center;
+          gap: 8px;
+          margin-top: 28px;
+        }
         @media (max-width: 768px) {
-          .t-real-grid {
-            grid-template-columns: 1fr;
-          }
-          .t-real-grid > :nth-child(7) {
-            grid-column: auto;
-          }
+          .t-carousel-desktop { display: none; }
+          .t-carousel-mobile { display: block; }
         }
       `}</style>
 
@@ -112,16 +139,36 @@ export default function Testimonials() {
         <p>Lo que dicen quienes ya cursaron y transformaron su carrera.</p>
       </div>
 
-      <div className="t-real-grid">
-        {TESTIMONIOS.map((t, i) => (
-          <div className="t-real-card" key={i}>
-            <img src={t.foto} alt={`Foto de ${t.nombre}`} />
-            <div className="t-real-body">
-              <p className="t-real-texto">"{t.texto}"</p>
-              <p className="t-real-nombre">{t.nombre}</p>
-              <p className="t-real-curso">{t.curso}</p>
-            </div>
-          </div>
+      {/* Desktop: 3 cards a la vez */}
+      <div className="t-carousel-desktop">
+        {[0, 1, 2].map(j => (
+          <Card key={j} t={TESTIMONIOS[(offset + j) % N]} />
+        ))}
+      </div>
+
+      {/* Mobile: 1 card a la vez */}
+      <div className="t-carousel-mobile">
+        <Card t={TESTIMONIOS[offset]} />
+      </div>
+
+      {/* Dots */}
+      <div className="t-dots">
+        {TESTIMONIOS.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setOffset(i)}
+            aria-label={`Testimonio ${i + 1}`}
+            style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              border: 'none',
+              padding: 0,
+              cursor: 'pointer',
+              background: i === offset ? '#F7A8B8' : '#444',
+              transition: 'background 300ms',
+            }}
+          />
         ))}
       </div>
     </section>
