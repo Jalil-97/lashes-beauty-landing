@@ -253,8 +253,7 @@ export default function ContactForm({ preselectedCourse }) {
                   <label>¿Cómo nos conociste?</label>
                   <select className="fc" value={origen} onChange={e => setOrigen(e.target.value)}>
                     <option value="">Seleccioná</option>
-                    <option>Instagram @lashes.beautyacademy</option>
-                    <option>Instagram @lashes.beautyok</option>
+                    <option>Instagram</option>
                     <option>Recomendación de alumna</option>
                     <option>Google</option>
                     <option>Otro</option>

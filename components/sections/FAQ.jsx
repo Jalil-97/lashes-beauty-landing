@@ -33,7 +33,7 @@ const FAQS = [
   },
   {
     q: '¿Cómo coordino el pago una vez que completo el formulario?',
-    a: 'Una vez que recibimos tu formulario, Micaela se va a contactar con vos en menos de 24hs para coordinar el método de pago y confirmar tu lugar.',
+    a: 'Una vez que recibimos tu formulario, te vamos a contactar en menos de 24hs para coordinar el método de pago y confirmar tu lugar.',
   },
 ]
 
