@@ -73,7 +73,7 @@ export default function Hero() {
           <div style={{ width: '100%', height: '300px', overflow: 'hidden', borderRadius: '12px 12px 0 0' }}>
             <img
               src="/images/hero-mica.webp"
-              alt="Micaela Sala"
+              alt="Micaela Sala, tri campeona internacional en Volumen Ruso y educadora en Lashes Beauty Academy"
               style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }}
             />
           </div>

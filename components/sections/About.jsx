@@ -13,7 +13,7 @@ export default function About() {
           <div className="about-photo">
             <img
               src="/images/about-mica.webp"
-              alt="Micaela Sala"
+              alt="Micaela Sala dando una conferencia sobre extensiones de pestañas"
               style={{ objectPosition: 'center top' }}
             />
           </div>

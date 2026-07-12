@@ -5,19 +5,19 @@ import { useState, useEffect } from 'react'
 const SLIDES = [
   {
     src: '/images/espacio-1.webp',
-    alt: 'Estudio principal Lashes Beauty Academy',
+    alt: 'Estudio principal de Lashes Beauty Academy en Villa Ballester con camillas ergonómicas',
     title: 'Estudio principal',
     sub: 'Camillas & ambient light',
   },
   {
     src: '/images/espacio-2.webp',
-    alt: 'El estudio',
+    alt: 'Espacio de práctica profesional en Lashes Beauty Academy',
     title: 'El estudio',
     sub: 'Espacio de práctica profesional',
   },
   {
     src: '/images/espacio-3.webp',
-    alt: 'Resultado real',
+    alt: 'Resultado de extensiones de pestañas realizadas por alumnas de Lashes Beauty Academy',
     title: 'Resultado real',
     sub: 'Trabajo de alumna',
   },
@@ -85,7 +85,7 @@ export default function Salon() {
             <div className="gph main">
               <img
                 src="/images/espacio-1.webp"
-                alt="Estudio principal Lashes Beauty Academy"
+                alt="Estudio principal de Lashes Beauty Academy en Villa Ballester con camillas ergonómicas"
                 style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
               />
               <div className="gph-cap">
@@ -96,7 +96,7 @@ export default function Salon() {
             <div className="gph">
               <img
                 src="/images/espacio-2.webp"
-                alt="Macro close-up extensión"
+                alt="Espacio de práctica profesional en Lashes Beauty Academy"
                 style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
               />
               <div className="gph-cap">
@@ -107,7 +107,7 @@ export default function Salon() {
             <div className="gph">
               <img
                 src="/images/espacio-3.webp"
-                alt="Área de práctica"
+                alt="Resultado de extensiones de pestañas realizadas por alumnas de Lashes Beauty Academy"
                 style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
               />
               <div className="gph-cap">

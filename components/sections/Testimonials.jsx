@@ -52,7 +52,7 @@ const N = TESTIMONIOS.length
 function Card({ t }) {
   return (
     <div className="t-real-card">
-      <img src={t.foto} alt={`Foto de ${t.nombre}`} />
+      <img src={t.foto} alt={`Testimonio de ${t.nombre} sobre el curso ${t.curso}`} />
       <div className="t-real-body">
         <p className="t-real-texto">"{t.texto}"</p>
         <p className="t-real-nombre">{t.nombre}</p>

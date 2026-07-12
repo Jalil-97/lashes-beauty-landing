@@ -9,6 +9,9 @@ const COURSES = CURSOS.map(c => ({
   badge: { label: c.nivelRequerido === 'principiante' ? 'Principiantes' : 'Presencial', style: {} },
   image: c.imagen,
   imgPlaceholder: c.nombre,
+  altText: c.id === 'lash-artist'
+    ? 'Curso De Cero a Lash Artist en Lashes Beauty Academy Villa Ballester'
+    : 'Curso Korean Lift Técnica Coreana en Lashes Beauty Academy',
   tags: [c.modalidad, c.nivel],
   title: c.nombre,
   desc: c.descripcion,
@@ -76,7 +79,7 @@ export default function Courses({ onPreselect }) {
               </div>
               <img
                 src={course.image}
-                alt={course.title}
+                alt={course.altText}
                 style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
               />
             </div>
