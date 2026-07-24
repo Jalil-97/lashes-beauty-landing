@@ -70,7 +70,9 @@ export default function Testimonials() {
     setVisible(false)
     setTimeout(() => {
       setOffset(typeof next === 'function' ? next : () => next)
-      setVisible(true)
+      setTimeout(() => {
+        setVisible(true)
+      }, 50)
     }, 300)
   }
 
