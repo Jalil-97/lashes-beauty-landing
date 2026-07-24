@@ -132,11 +132,16 @@ export default function ContactForm({ preselectedCourse }) {
           metodoPago: PAY_LABELS[payMethod] || payMethod,
         }),
       })
-      if (!res.ok) throw new Error('request failed')
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'request failed')
+      }
       setSubmitted(true)
       document.getElementById('s-form')?.scrollIntoView({ behavior: 'smooth' })
-    } catch {
-      setError('Hubo un error al enviar. Intentá de nuevo.')
+    } catch (err) {
+      setError(err?.message && err.message !== 'request failed'
+        ? err.message
+        : 'Hubo un error al enviar. Intentá de nuevo.')
     } finally {
       setSending(false)
     }

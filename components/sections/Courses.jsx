@@ -67,9 +67,9 @@ export default function Courses({ onPreselect }) {
         ))}
       </div>
 
-      <div className="courses" id="courses-grid" style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '24px' }}>
+      <div className="courses" id="courses-grid" style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '24px', alignItems: 'stretch' }}>
         {visible.map(course => (
-          <div className="cc" key={course.id} style={{ maxWidth: '400px', width: '100%' }}>
+          <div className="cc" key={course.id} style={{ maxWidth: '400px', width: '100%', height: '100%' }}>
             {course.badge && (
               <span className="cc-badge" style={course.badge.style}>{course.badge.label}</span>
             )}

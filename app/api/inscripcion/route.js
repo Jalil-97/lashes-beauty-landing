@@ -2,6 +2,33 @@ import { Resend } from 'resend'
 
 const FROM_EMAIL = 'Lashes Beauty Academy <inscripciones@lashesbeautyok.com>'
 
+const rateLimit = new Map()
+
+function checkRateLimit(ip) {
+  const now = Date.now()
+  const windowMs = 10 * 60 * 1000
+  const maxRequests = 5
+
+  const record = rateLimit.get(ip)
+
+  if (!record) {
+    rateLimit.set(ip, { count: 1, start: now })
+    return true
+  }
+
+  if (now - record.start > windowMs) {
+    rateLimit.set(ip, { count: 1, start: now })
+    return true
+  }
+
+  if (record.count >= maxRequests) {
+    return false
+  }
+
+  record.count++
+  return true
+}
+
 // Escapa valores del usuario antes de interpolarlos en el HTML del email.
 function esc(value) {
   return String(value ?? '')
@@ -21,6 +48,18 @@ function row(label, value) {
 }
 
 export async function POST(request) {
+  const ip =
+    request.headers.get('x-forwarded-for')?.split(',')[0] ||
+    request.headers.get('x-real-ip') ||
+    '127.0.0.1'
+
+  if (!checkRateLimit(ip)) {
+    return Response.json(
+      { error: 'Demasiados intentos. Por favor esperá unos minutos antes de intentar de nuevo.' },
+      { status: 429 },
+    )
+  }
+
   let body
   try {
     body = await request.json()
