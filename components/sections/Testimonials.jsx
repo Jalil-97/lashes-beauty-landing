@@ -64,9 +64,18 @@ function Card({ t }) {
 
 export default function Testimonials() {
   const [offset, setOffset] = useState(0)
+  const [visible, setVisible] = useState(true)
+
+  function advance(next) {
+    setVisible(false)
+    setTimeout(() => {
+      setOffset(typeof next === 'function' ? next : () => next)
+      setVisible(true)
+    }, 300)
+  }
 
   useEffect(() => {
-    const id = setInterval(() => setOffset(o => (o + 1) % N), 4000)
+    const id = setInterval(() => advance(o => (o + 1) % N), 4000)
     return () => clearInterval(id)
   }, [])
 
@@ -140,14 +149,14 @@ export default function Testimonials() {
       </div>
 
       {/* Desktop: 3 cards a la vez */}
-      <div className="t-carousel-desktop">
+      <div className="t-carousel-desktop" style={{ transition: 'opacity 300ms ease-in-out', opacity: visible ? 1 : 0 }}>
         {[0, 1, 2].map(j => (
           <Card key={j} t={TESTIMONIOS[(offset + j) % N]} />
         ))}
       </div>
 
       {/* Mobile: 1 card a la vez */}
-      <div className="t-carousel-mobile">
+      <div className="t-carousel-mobile" style={{ transition: 'opacity 300ms ease-in-out', opacity: visible ? 1 : 0 }}>
         <Card t={TESTIMONIOS[offset]} />
       </div>
 
@@ -156,7 +165,7 @@ export default function Testimonials() {
         {TESTIMONIOS.map((_, i) => (
           <button
             key={i}
-            onClick={() => setOffset(i)}
+            onClick={() => advance(i)}
             aria-label={`Testimonio ${i + 1}`}
             style={{
               width: '8px',
