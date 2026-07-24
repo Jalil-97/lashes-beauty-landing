@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 
 // July 15, 2026 00:00 Argentina time (UTC-3) = 03:00 UTC
-const TARGET = new Date('2026-07-15T03:00:00Z')
+const TARGET = new Date('2026-07-24T21:00:00-03:00')
 
 function getTimeLeft() {
   const diff = TARGET - Date.now()
