@@ -38,6 +38,7 @@ export default function ContactForm({ preselectedCourse }) {
   // Paso 3
   const [payMethod, setPayMethod] = useState('')
   const [terms, setTerms] = useState(false)
+  const [grupo, setGrupo] = useState('')
 
   useEffect(() => {
     if (preselectedCourse) setCurso(preselectedCourse)
@@ -84,6 +85,7 @@ export default function ContactForm({ preselectedCourse }) {
     if (!nivel) e.nivel = 'Elegí tu nivel actual'
     else if (getCurso(curso)?.nivelRequerido === 'con-experiencia' && nivel === 'Principiante')
       e.nivel = 'Este curso requiere conocimientos previos. Te recomendamos comenzar con De Cero a Lash Artist.'
+    if (getCurso(curso)?.grupos && !grupo) e.grupo = 'Por favor seleccioná un grupo'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -128,6 +130,7 @@ export default function ContactForm({ preselectedCourse }) {
           comoNosConociste: origen,
           curso,
           nivel,
+          grupo: grupo || undefined,
           modalidad: getModalidad(curso),
           metodoPago: PAY_LABELS[payMethod] || payMethod,
         }),
@@ -275,7 +278,7 @@ export default function ContactForm({ preselectedCourse }) {
               <div id="step-screen-2">
                 <div className="fg">
                   <label>Curso de interés</label>
-                  <select className="fc" value={curso} onChange={e => { setCurso(e.target.value); clearError('curso') }}>
+                  <select className="fc" value={curso} onChange={e => { setCurso(e.target.value); setGrupo(''); clearError('curso'); clearError('grupo') }}>
                     <option value="">Seleccioná un curso</option>
                     {CURSOS.map(c => (
                       <option key={c.id} value={c.nombre}>{c.nombre}</option>
@@ -289,6 +292,20 @@ export default function ContactForm({ preselectedCourse }) {
                     </div>
                   )}
                 </div>
+                {getCurso(curso)?.grupos && (
+                  <div className="fg">
+                    <label>Seleccioná tu grupo</label>
+                    <select className="fc" value={grupo} onChange={e => { setGrupo(e.target.value); clearError('grupo') }}>
+                      <option value="">Seleccioná un grupo</option>
+                      {getCurso(curso).grupos.map(g => (
+                        <option key={g.id} value={g.nombre}>
+                          {g.nombre} — Presenciales: sábados desde el {g.presenciales[0].match(/(\d+) de (\w+)/)?.[0].replace(' de agosto', '/08').replace(' de septiembre', '/09').replace(' de octubre', '/10')} ({g.cupos} cupo{g.cupos !== 1 ? 's' : ''} disponible{g.cupos !== 1 ? 's' : ''})
+                        </option>
+                      ))}
+                    </select>
+                    {fieldError('grupo')}
+                  </div>
+                )}
                 <div className="fg">
                   <label>Tu nivel actual</label>
                   <select className="fc" value={nivel} onChange={e => { setNivel(e.target.value); clearError('nivel') }}>
@@ -329,6 +346,7 @@ export default function ContactForm({ preselectedCourse }) {
                 </div>
                 <div className="summary-box">
                   <div className="summary-row"><span>Curso</span><span>{curso || '—'}</span></div>
+                  {grupo && <div className="summary-row"><span>Grupo</span><span>{grupo}</span></div>}
                   <div className="summary-row"><span>Modalidad</span><span>{getModalidad(curso) || '—'}</span></div>
                   <div className="summary-row">
                     <span>Total</span>

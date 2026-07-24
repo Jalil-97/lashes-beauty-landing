@@ -75,6 +75,7 @@ export async function POST(request) {
     comoNosConociste,
     curso,
     nivel,
+    grupo,
     modalidad,
     metodoPago,
   } = body || {}
@@ -106,6 +107,7 @@ export async function POST(request) {
       ${row('WhatsApp', whatsapp)}
       ${row('Cómo nos conoció', comoNosConociste)}
       ${row('Curso', curso)}
+      ${grupo ? row('Grupo', grupo) : ''}
       ${row('Nivel', nivel)}
       ${row('Modalidad', modalidad)}
       ${row('Método de pago', metodoPago)}
