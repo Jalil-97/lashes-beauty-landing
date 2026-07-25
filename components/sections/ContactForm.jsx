@@ -82,6 +82,7 @@ export default function ContactForm({ preselectedCourse }) {
   function validateStep2() {
     const e = {}
     if (!curso) e.curso = 'Elegí un curso'
+    else if (getCurso(curso)?.soldOut) e.soldOut = true
     if (!nivel) e.nivel = 'Elegí tu nivel actual'
     else if (getCurso(curso)?.nivelRequerido === 'con-experiencia' && nivel === 'Principiante')
       e.nivel = 'Este curso requiere conocimientos previos. Te recomendamos comenzar con De Cero a Lash Artist.'
@@ -285,7 +286,12 @@ export default function ContactForm({ preselectedCourse }) {
                     ))}
                   </select>
                   {fieldError('curso')}
-                  {curso && getCurso(curso) && (
+                  {curso && getCurso(curso)?.soldOut && (
+                    <p style={{ color: '#A3A3A8', fontSize: '0.85rem', marginTop: '8px', marginBottom: 0 }}>
+                      Este curso no tiene cupos disponibles en este momento.
+                    </p>
+                  )}
+                  {curso && getCurso(curso) && !getCurso(curso).soldOut && (
                     <div style={{ marginTop: '8px', color: '#A3A3A8', fontSize: '0.82rem', lineHeight: '1.6' }}>
                       <div>Modalidad: {getCurso(curso).modalidad}</div>
                       <div>{getCurso(curso).labelNivel}</div>
@@ -298,8 +304,10 @@ export default function ContactForm({ preselectedCourse }) {
                     <select className="fc" value={grupo} onChange={e => { setGrupo(e.target.value); clearError('grupo') }}>
                       <option value="">Seleccioná un grupo</option>
                       {getCurso(curso).grupos.map(g => (
-                        <option key={g.id} value={g.nombre}>
-                          {g.nombre} — Presenciales: sábados desde el {g.presenciales[0].match(/(\d+) de (\w+)/)?.[0].replace(' de agosto', '/08').replace(' de septiembre', '/09').replace(' de octubre', '/10')} ({g.cupos} cupo{g.cupos !== 1 ? 's' : ''} disponible{g.cupos !== 1 ? 's' : ''})
+                        <option key={g.id} value={g.nombre} disabled={g.cupos === 0}>
+                          {g.cupos === 0
+                            ? `${g.nombre} — Sin cupos disponibles`
+                            : `${g.nombre} — Presenciales: sábados desde el ${g.presenciales[0].match(/(\d+) de (\w+)/)?.[0].replace(' de agosto', '/08').replace(' de septiembre', '/09').replace(' de octubre', '/10')} (${g.cupos} cupo${g.cupos !== 1 ? 's' : ''} disponible${g.cupos !== 1 ? 's' : ''})`}
                         </option>
                       ))}
                     </select>

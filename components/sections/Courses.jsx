@@ -26,6 +26,7 @@ const COURSES = CURSOS.map(c => ({
   price: '$' + c.precio.toLocaleString('es-AR'),
   priceOld: '$' + c.precioTachado.toLocaleString('es-AR'),
   btnClass: c.nivelRequerido === 'principiante' ? 'btn-p' : 'btn-s',
+  soldOut: c.soldOut || false,
   grupos: c.grupos || null,
   virtuales: c.virtuales || null,
 }))
@@ -76,7 +77,9 @@ export default function Courses({ onPreselect }) {
         <div className="courses" id="courses-grid" style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '24px', alignItems: 'stretch' }}>
           {visible.map(course => (
             <div className="cc" key={course.id} style={{ maxWidth: '400px', width: '100%', height: '100%' }}>
-              {course.badge && (
+              {course.soldOut ? (
+                <span className="cc-badge" style={{ background: '#1A1A1C', color: '#A3A3A8', border: '0.5px solid #2C2C2F' }}>SOLD OUT</span>
+              ) : course.badge && (
                 <span className="cc-badge" style={course.badge.style}>{course.badge.label}</span>
               )}
               <div className="cc-img" style={{ position: 'relative', overflow: 'hidden' }}>
@@ -147,12 +150,22 @@ export default function Courses({ onPreselect }) {
                   )}
                   <span className="amt" style={{ fontSize: '28px', fontWeight: '700', color: '#F7A8B8' }}>{course.price}</span>
                 </div>
-                <button
-                  className={`btn ${course.btnClass} btn-full`}
-                  onClick={() => handleInscribirse(course.title)}
-                >
-                  Inscribirme
-                </button>
+                {course.soldOut ? (
+                  <button
+                    className="btn btn-full"
+                    disabled
+                    style={{ color: '#A3A3A8', cursor: 'not-allowed', background: 'transparent', border: '0.5px solid #2C2C2F' }}
+                  >
+                    Sin cupos disponibles
+                  </button>
+                ) : (
+                  <button
+                    className={`btn ${course.btnClass} btn-full`}
+                    onClick={() => handleInscribirse(course.title)}
+                  >
+                    Inscribirme
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -206,8 +219,8 @@ export default function Courses({ onPreselect }) {
                 </div>
                 {lashArtist.grupos.map(g => (
                   <div key={g.id} style={{ background: '#111113', borderRadius: '8px', padding: '12px 14px', marginBottom: '8px' }}>
-                    <div style={{ fontSize: '11px', color: '#F7A8B8', fontWeight: 600, letterSpacing: '0.08em', marginBottom: '8px', textTransform: 'uppercase' }}>
-                      {g.nombre} — {g.cupos} {g.cupos === 1 ? 'CUPO DISPONIBLE' : 'CUPOS DISPONIBLES'}
+                    <div style={{ fontSize: '11px', color: g.cupos === 0 ? '#A3A3A8' : '#F7A8B8', fontWeight: 600, letterSpacing: '0.08em', marginBottom: '8px', textTransform: 'uppercase' }}>
+                      {g.nombre} — {g.cupos === 0 ? 'SIN CUPOS' : `${g.cupos} ${g.cupos === 1 ? 'CUPO DISPONIBLE' : 'CUPOS DISPONIBLES'}`}
                     </div>
                     {g.presenciales.map((p, i) => (
                       <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: i < g.presenciales.length - 1 ? '4px' : 0 }}>
