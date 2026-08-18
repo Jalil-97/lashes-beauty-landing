@@ -17,7 +17,13 @@ const FAQS = [
   },
   {
     q: '¿Qué materiales están incluidos en la formación?',
-    a: 'La mentoría incluye materiales de la mejor calidad en las prácticas presenciales, coffee break en cada encuentro, acceso a las clases grabadas durante 3 meses, acompañamiento antes, durante y después de la cursada, grupo privado de seguimiento, y almuerzo con brindis de graduación. Además podés adquirir tus materiales directamente en la academia para iniciar tu camino profesional con todo lo necesario.',
+    a: (
+      <>
+        La mentoría incluye materiales de la mejor calidad en las prácticas presenciales, coffee break en cada encuentro, acceso a las clases grabadas durante 3 meses, acompañamiento antes, durante y después de la cursada, grupo privado de seguimiento, y almuerzo con brindis de graduación. Además, podés adquirir tus materiales directamente en nuestra academia o en nuestra{' '}
+        <a href="https://lbinsumos.mitiendanube.com" target="_blank" rel="noopener" style={{ color: '#F7A8B8' }}>tienda online</a>
+        {' '}para iniciar tu camino profesional con todo lo necesario.
+      </>
+    ),
   },
   {
     q: '¿El certificado tiene validez?',

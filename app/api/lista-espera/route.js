@@ -1,5 +1,4 @@
 import { Resend } from 'resend'
-import { CURSOS } from '@/lib/cursos'
 
 const FROM_EMAIL = 'Lashes Beauty Academy <inscripciones@lashesbeautyok.com>'
 
@@ -30,7 +29,6 @@ function checkRateLimit(ip) {
   return true
 }
 
-// Escapa valores del usuario antes de interpolarlos en el HTML del email.
 function esc(value) {
   return String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -68,22 +66,9 @@ export async function POST(request) {
     return Response.json({ ok: false, error: 'Body inválido' }, { status: 400 })
   }
 
-  const {
-    nombre,
-    apellido,
-    email,
-    whatsapp,
-    comoNosConociste,
-    curso,
-    nivel,
-    grupo,
-    modalidad,
-    metodoPago,
-    kit,
-  } = body || {}
+  const { nombre, apellido, email, whatsapp, curso } = body || {}
 
-  // Validación: nombre, email, curso y whatsapp son obligatorios.
-  const required = { nombre, email, curso, whatsapp }
+  const required = { nombre, email, whatsapp, curso }
   const faltantes = Object.entries(required)
     .filter(([, value]) => !String(value ?? '').trim())
     .map(([key]) => key)
@@ -95,33 +80,23 @@ export async function POST(request) {
     )
   }
 
-  const cursoData = CURSOS.find(c => c.nombre === String(curso ?? '').trim())
-  const kitPrecio = kit && cursoData?.kit?.disponible ? cursoData.kit.precio : null
-
   const waNumber = `549${String(whatsapp ?? '').replace(/\D/g, '')}`
-  const waText = encodeURIComponent(`Hola ${nombre}! Recibí tu pre-inscripción: ${curso}. Te contacto para coordinar el pago 🙌`)
+  const waText = encodeURIComponent(`Hola ${nombre}! Vi tu interés en ${curso}. Te escribo para contarte las próximas fechas disponibles 🙌`)
   const waUrl = esc(`https://wa.me/${waNumber}?text=${waText}`)
 
   const html = `
   <div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;color:#0F0F10;">
-    <h2 style="font-family:Georgia,serif;color:#0F0F10;">Nueva inscripción — Lashes Beauty Academy</h2>
-    <p style="color:#2C2C2F;">Llegó una nueva pre-inscripción desde la landing:</p>
+    <h2 style="font-family:Georgia,serif;color:#0F0F10;">Nueva solicitud de lista de espera — Lashes Beauty Academy</h2>
+    <p style="color:#2C2C2F;">${esc(nombre)} está interesada en ${esc(curso)} y quiere recibir información cuando haya nuevas fechas disponibles.</p>
     <table style="border-collapse:separate;border-spacing:0 6px;width:100%;font-size:14px;">
       ${row('Nombre', `${nombre ?? ''} ${apellido ?? ''}`)}
       ${row('Email', email)}
       ${row('WhatsApp', whatsapp)}
-      ${row('Cómo nos conoció', comoNosConociste)}
       ${row('Curso', curso)}
-      ${grupo ? row('Grupo', grupo) : ''}
-      ${row('Nivel', nivel)}
-      ${row('Modalidad', modalidad)}
-      ${row('Método de pago', metodoPago)}
-      ${kitPrecio !== null ? row('Kit de materiales', '$' + Number(kitPrecio).toLocaleString('es-AR')) : ''}
-      ${kitPrecio !== null && cursoData ? row('Total', '$' + (cursoData.precio + kitPrecio).toLocaleString('es-AR')) : ''}
     </table>
     <div style="text-align:center;margin-top:28px;">
       <a href="${waUrl}" style="display:inline-block;background:#25D366;color:#ffffff;font-weight:700;text-decoration:none;padding:14px 28px;border-radius:8px;font-family:Inter,Arial,sans-serif;font-size:15px;">
-        Contactar por WhatsApp →
+        Escribirle por WhatsApp →
       </a>
     </div>
   </div>`
@@ -131,7 +106,7 @@ export async function POST(request) {
     const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: process.env.TO_EMAIL,
-      subject: `${curso} — ${nombre} ${apellido ?? ''}`.trim(),
+      subject: `Lista de espera — ${curso} — ${nombre} ${apellido ?? ''}`.trim(),
       html,
     })
 

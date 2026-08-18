@@ -39,6 +39,12 @@ export default function ContactForm({ preselectedCourse }) {
   const [payMethod, setPayMethod] = useState('')
   const [terms, setTerms] = useState(false)
   const [grupo, setGrupo] = useState('')
+  const [kitSeleccionado, setKitSeleccionado] = useState(false)
+
+  // Lista de espera
+  const [listaEsperaOk, setListaEsperaOk] = useState(false)
+  const [listaEsperaSending, setListaEsperaSending] = useState(false)
+  const [listaEsperaError, setListaEsperaError] = useState('')
 
   useEffect(() => {
     if (preselectedCourse) setCurso(preselectedCourse)
@@ -85,7 +91,7 @@ export default function ContactForm({ preselectedCourse }) {
     else if (getCurso(curso)?.soldOut) e.soldOut = true
     if (!nivel) e.nivel = 'Elegí tu nivel actual'
     else if (getCurso(curso)?.nivelRequerido === 'con-experiencia' && nivel === 'Principiante')
-      e.nivel = 'Este curso requiere conocimientos previos. Te recomendamos comenzar con De Cero a Lash Artist.'
+      e.nivel = 'Este curso requiere conocimientos previos. Te recomendamos comenzar con De Cero a Lash Artist o Lash Dúo.'
     if (getCurso(curso)?.grupos && !grupo) e.grupo = 'Por favor seleccioná un grupo'
     setErrors(e)
     return Object.keys(e).length === 0
@@ -134,6 +140,7 @@ export default function ContactForm({ preselectedCourse }) {
           grupo: grupo || undefined,
           modalidad: getModalidad(curso),
           metodoPago: PAY_LABELS[payMethod] || payMethod,
+          kit: kitSeleccionado,
         }),
       })
       if (!res.ok) {
@@ -151,20 +158,71 @@ export default function ContactForm({ preselectedCourse }) {
     }
   }
 
+  async function sendListaEspera() {
+    if (listaEsperaSending) return
+    setListaEsperaError('')
+    setListaEsperaSending(true)
+    try {
+      const res = await fetch('/api/lista-espera', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre, apellido, email, whatsapp, curso }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'request failed')
+      }
+      setListaEsperaOk(true)
+      document.getElementById('s-form')?.scrollIntoView({ behavior: 'smooth' })
+    } catch (err) {
+      setListaEsperaError(
+        err?.message && err.message !== 'request failed'
+          ? err.message
+          : 'Hubo un error. Intentá de nuevo.'
+      )
+    } finally {
+      setListaEsperaSending(false)
+    }
+  }
+
   const stepClass = (n) => {
     if (n < step) return 'step done'
     if (n === step) return 'step active'
     return 'step'
   }
 
+  const cursoSoldOut = !!(curso && getCurso(curso)?.soldOut)
+
+  const sectionHeader = (
+    <div className="sec-hd">
+      <div className="tag tag-center">Inscripción</div>
+      <h2>Reservá tu <em>lugar</em></h2>
+      <p>Cupos limitados — trabajamos con grupos exclusivos de hasta 6 alumnas para asegurar una experiencia más personalizada.</p>
+    </div>
+  )
+
+  if (listaEsperaOk) {
+    return (
+      <section className="section" id="s-form">
+        {sectionHeader}
+        <div className="form-wrap">
+          <div className="success-screen">
+            <div className="success-icon">✓</div>
+            <h3>¡Te anotamos en la <em>lista de espera</em>!</h3>
+            <p>
+              Cuando haya nuevas fechas para {curso}, vas a ser una de las primeras en enterarte.
+              ¡Gracias por tu interés!
+            </p>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
   if (submitted) {
     return (
       <section className="section" id="s-form">
-        <div className="sec-hd">
-          <div className="tag tag-center">Inscripción</div>
-          <h2>Reservá tu <em>lugar</em></h2>
-          <p>Cupos limitados — trabajamos con grupos exclusivos de hasta 6 alumnas para asegurar una experiencia más personalizada.</p>
-        </div>
+        {sectionHeader}
         <div className="form-wrap">
           <div className="success-screen">
             <div className="success-icon">✓</div>
@@ -189,11 +247,7 @@ export default function ContactForm({ preselectedCourse }) {
 
   return (
     <section className="section" id="s-form">
-      <div className="sec-hd">
-        <div className="tag tag-center">Inscripción</div>
-        <h2>Reservá tu <em>lugar</em></h2>
-        <p>Cupos limitados — trabajamos con grupos exclusivos de hasta 6 alumnas para asegurar una experiencia más personalizada.</p>
-      </div>
+      {sectionHeader}
 
       <div className="form-wrap">
         <div className="form-inner" id="form-inner">
@@ -279,55 +333,121 @@ export default function ContactForm({ preselectedCourse }) {
               <div id="step-screen-2">
                 <div className="fg">
                   <label>Curso de interés</label>
-                  <select className="fc" value={curso} onChange={e => { setCurso(e.target.value); setGrupo(''); clearError('curso'); clearError('grupo') }}>
+                  <select className="fc" value={curso} onChange={e => { setCurso(e.target.value); setGrupo(''); setKitSeleccionado(false); clearError('curso'); clearError('grupo') }}>
                     <option value="">Seleccioná un curso</option>
                     {CURSOS.map(c => (
                       <option key={c.id} value={c.nombre}>{c.nombre}</option>
                     ))}
                   </select>
                   {fieldError('curso')}
-                  {curso && getCurso(curso)?.soldOut && (
-                    <p style={{ color: '#A3A3A8', fontSize: '0.85rem', marginTop: '8px', marginBottom: 0 }}>
+                  {cursoSoldOut && (
+                    <p style={{ color: '#A3A3A8', fontSize: '13px', marginTop: '8px', marginBottom: 0 }}>
                       Este curso no tiene cupos disponibles en este momento.
                     </p>
                   )}
-                  {curso && getCurso(curso) && !getCurso(curso).soldOut && (
+                  {curso && getCurso(curso) && !cursoSoldOut && (
                     <div style={{ marginTop: '8px', color: '#A3A3A8', fontSize: '0.82rem', lineHeight: '1.6' }}>
                       <div>Modalidad: {getCurso(curso).modalidad}</div>
                       <div>{getCurso(curso).labelNivel}</div>
                     </div>
                   )}
                 </div>
-                {getCurso(curso)?.grupos && (
-                  <div className="fg">
-                    <label>Seleccioná tu grupo</label>
-                    <select className="fc" value={grupo} onChange={e => { setGrupo(e.target.value); clearError('grupo') }}>
-                      <option value="">Seleccioná un grupo</option>
-                      {getCurso(curso).grupos.map(g => (
-                        <option key={g.id} value={g.nombre} disabled={g.cupos === 0}>
-                          {g.cupos === 0
-                            ? `${g.nombre} — Sin cupos disponibles`
-                            : `${g.nombre} — Presenciales: sábados desde el ${g.presenciales[0].match(/(\d+) de (\w+)/)?.[0].replace(' de agosto', '/08').replace(' de septiembre', '/09').replace(' de octubre', '/10')} (${g.cupos} cupo${g.cupos !== 1 ? 's' : ''} disponible${g.cupos !== 1 ? 's' : ''})`}
-                        </option>
-                      ))}
-                    </select>
-                    {fieldError('grupo')}
-                  </div>
+
+                {/* Lista de espera — sold out */}
+                {cursoSoldOut && (
+                  <>
+                    <button
+                      className="btn btn-s btn-full"
+                      onClick={sendListaEspera}
+                      disabled={listaEsperaSending}
+                    >
+                      {listaEsperaSending ? 'Enviando...' : 'Quiero anotarme en la lista de espera'}
+                    </button>
+                    {listaEsperaError && (
+                      <p role="alert" style={{ color: '#e5484d', fontSize: '0.8rem', marginTop: '8px', textAlign: 'center' }}>
+                        {listaEsperaError}
+                      </p>
+                    )}
+                    <div className="nav-btns" style={{ marginTop: '16px' }}>
+                      <button className="btn btn-s" style={{ flex: 1 }} onClick={() => goStep(1)}>← Volver</button>
+                    </div>
+                  </>
                 )}
-                <div className="fg">
-                  <label>Tu nivel actual</label>
-                  <select className="fc" value={nivel} onChange={e => { setNivel(e.target.value); clearError('nivel') }}>
-                    <option value="">Seleccioná tu nivel</option>
-                    <option value="Principiante">Principiante</option>
-                    <option value="Tengo algo de experiencia">Tengo algo de experiencia</option>
-                    <option value="Avanzada">Avanzada</option>
-                  </select>
-                  {fieldError('nivel')}
-                </div>
-                <div className="nav-btns">
-                  <button className="btn btn-s" style={{ flex: 1 }} onClick={() => goStep(1)}>← Volver</button>
-                  <button className="btn btn-p" style={{ flex: 2 }} onClick={() => nextFrom(2)}>Continuar →</button>
-                </div>
+
+                {/* Flujo normal — no sold out */}
+                {!cursoSoldOut && (
+                  <>
+                    {getCurso(curso)?.grupos && (
+                      <div className="fg">
+                        <label>Seleccioná tu grupo</label>
+                        <select className="fc" value={grupo} onChange={e => { setGrupo(e.target.value); clearError('grupo') }}>
+                          <option value="">Seleccioná un grupo</option>
+                          {getCurso(curso).grupos.map(g => (
+                            <option key={g.id} value={g.nombre} disabled={g.cupos === 0}>
+                              {g.cupos === 0
+                                ? `${g.nombre} — Sin cupos disponibles`
+                                : `${g.nombre} — ${g.cupos} cupo${g.cupos !== 1 ? 's' : ''} disponible${g.cupos !== 1 ? 's' : ''}`}
+                            </option>
+                          ))}
+                        </select>
+                        {fieldError('grupo')}
+                      </div>
+                    )}
+                    {getCurso(curso)?.kit?.disponible && (
+                      <div className="fg">
+                        <label>¿Querés sumar el kit de materiales?</label>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+                          {[
+                            { value: false, label: 'No por ahora' },
+                            { value: true, label: `Sí, quiero el kit — $${getCurso(curso).kit.precio.toLocaleString('es-AR')}` },
+                          ].map(opt => (
+                            <div
+                              key={String(opt.value)}
+                              onClick={() => setKitSeleccionado(opt.value)}
+                              style={{
+                                border: `0.5px solid ${kitSeleccionado === opt.value ? '#F7A8B8' : '#2C2C2F'}`,
+                                borderRadius: '8px',
+                                padding: '12px 14px',
+                                cursor: 'pointer',
+                                background: kitSeleccionado === opt.value ? 'rgba(247,168,184,0.06)' : 'transparent',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                              }}
+                            >
+                              <div style={{
+                                width: '16px', height: '16px', borderRadius: '50%', flexShrink: 0,
+                                border: `1.5px solid ${kitSeleccionado === opt.value ? '#F7A8B8' : '#A3A3A8'}`,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              }}>
+                                {kitSeleccionado === opt.value && (
+                                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#F7A8B8' }} />
+                                )}
+                              </div>
+                              <span style={{ fontSize: '13px', color: kitSeleccionado === opt.value ? '#fff' : '#A3A3A8' }}>
+                                {opt.label}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <div className="fg">
+                      <label>Tu nivel actual</label>
+                      <select className="fc" value={nivel} onChange={e => { setNivel(e.target.value); clearError('nivel') }}>
+                        <option value="">Seleccioná tu nivel</option>
+                        <option value="Principiante">Principiante</option>
+                        <option value="Tengo algo de experiencia">Tengo algo de experiencia</option>
+                        <option value="Avanzada">Avanzada</option>
+                      </select>
+                      {fieldError('nivel')}
+                    </div>
+                    <div className="nav-btns">
+                      <button className="btn btn-s" style={{ flex: 1 }} onClick={() => goStep(1)}>← Volver</button>
+                      <button className="btn btn-p" style={{ flex: 2 }} onClick={() => nextFrom(2)}>Continuar →</button>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
@@ -353,12 +473,25 @@ export default function ContactForm({ preselectedCourse }) {
                   {fieldError('payMethod')}
                 </div>
                 <div className="summary-box">
-                  <div className="summary-row"><span>Curso</span><span>{curso || '—'}</span></div>
+                  <div className="summary-row">
+                    <span>Curso</span>
+                    <span>{getCurso(curso) ? `${curso} — $${getCurso(curso).precio.toLocaleString('es-AR')}` : curso || '—'}</span>
+                  </div>
+                  {kitSeleccionado && getCurso(curso)?.kit?.disponible && (
+                    <div className="summary-row">
+                      <span>Kit de materiales</span>
+                      <span>${getCurso(curso).kit.precio.toLocaleString('es-AR')}</span>
+                    </div>
+                  )}
                   {grupo && <div className="summary-row"><span>Grupo</span><span>{grupo}</span></div>}
                   <div className="summary-row"><span>Modalidad</span><span>{getModalidad(curso) || '—'}</span></div>
                   <div className="summary-row">
                     <span>Total</span>
-                    <span>{getCurso(curso) ? '$' + getCurso(curso).precio.toLocaleString('es-AR') : '—'}</span>
+                    <span>
+                      {getCurso(curso)
+                        ? '$' + (getCurso(curso).precio + (kitSeleccionado && getCurso(curso)?.kit?.precio ? getCurso(curso).kit.precio : 0)).toLocaleString('es-AR')
+                        : '—'}
+                    </span>
                   </div>
                 </div>
                 <div className="cb">

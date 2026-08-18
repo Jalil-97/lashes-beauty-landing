@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import Proximamente from './proximamente/page'
 import Sitio from './sitio/page'
 
