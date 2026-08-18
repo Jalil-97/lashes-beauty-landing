@@ -112,6 +112,7 @@ export async function POST(request) {
       ${row('WhatsApp', whatsapp)}
       ${row('Cómo nos conoció', comoNosConociste)}
       ${row('Curso', curso)}
+      ${cursoData ? row('Precio del curso', '$' + Number(cursoData.precio).toLocaleString('es-AR')) : ''}
       ${grupo ? row('Grupo', grupo) : ''}
       ${row('Nivel', nivel)}
       ${row('Modalidad', modalidad)}
@@ -121,7 +122,7 @@ export async function POST(request) {
     </table>
     <div style="text-align:center;margin-top:28px;">
       <a href="${waUrl}" style="display:inline-block;background:#25D366;color:#ffffff;font-weight:700;text-decoration:none;padding:14px 28px;border-radius:8px;font-family:Inter,Arial,sans-serif;font-size:15px;">
-        Contactar por WhatsApp →
+        Escribirle por WhatsApp →
       </a>
     </div>
   </div>`
