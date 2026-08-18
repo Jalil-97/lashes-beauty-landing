@@ -1,7 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { CURSOS } from '@/lib/cursos'
+import { Landmark, CreditCard, Banknote } from 'lucide-react'
 
 const ALT_TEXTS = {
   'lash-artist': 'Curso De Cero a Lash Artist en Lashes Beauty Academy Villa Ballester',
@@ -14,7 +16,7 @@ const ALT_TEXTS = {
 const COURSES = CURSOS.map(c => ({
   id: c.id,
   cat: c.filtros,
-  badge: { label: c.nivelRequerido === 'principiante' ? 'Principiantes' : 'Presencial', style: {} },
+  badge: { label: c.modalidad.toUpperCase(), style: {} },
   image: c.imagen,
   imgPlaceholder: c.nombre,
   altText: ALT_TEXTS[c.id] || `Curso ${c.nombre} en Lashes Beauty Academy`,
@@ -44,6 +46,20 @@ const FILTERS = [
   { key: 'hyb', label: 'Híbrido' },
   { key: 'onl', label: 'Online' },
 ]
+
+const PAYPAL_SVG_PATH = 'M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.291-.077.443-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.1zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.506l-.24 1.516a.56.56 0 0 0 .554.647h3.882c.46 0 .85-.334.922-.788.06-.26.76-4.852.816-5.09a.932.932 0 0 1 .923-.788h.58c3.76 0 6.705-1.528 7.565-5.946.36-1.847.174-3.388-.777-4.471z'
+
+function getMetodoIcon(metodo) {
+  if (metodo.startsWith('PayPal')) return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="#009CDE">
+      <path d={PAYPAL_SVG_PATH} />
+    </svg>
+  )
+  if (metodo.startsWith('Tarjeta')) return <CreditCard size={22} color="#A3A3A8" />
+  if (metodo.startsWith('Transferencia')) return <Landmark size={22} color="#A3A3A8" />
+  if (metodo.startsWith('Efectivo')) return <Banknote size={22} color="#A3A3A8" />
+  return null
+}
 
 export default function Courses({ onPreselect }) {
   const [activeFilter, setActiveFilter] = useState('todos')
@@ -198,9 +214,9 @@ export default function Courses({ onPreselect }) {
       </section>
 
       {/* Modal de grupos */}
-      {modalCurso && (
+      {modalCurso && createPortal(
         <div
-          style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+          style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           onClick={() => setModalCurso(null)}
         >
           <div
@@ -260,11 +276,11 @@ export default function Courses({ onPreselect }) {
             )}
           </div>
         </div>
-      )}
+      , document.body)}
       {/* Modal de temario */}
-      {modalTemario && (
+      {modalTemario && createPortal(
         <div
-          style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+          style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           onClick={() => setModalTemario(null)}
         >
           <div
@@ -304,8 +320,8 @@ export default function Courses({ onPreselect }) {
                     </p>
                   )}
                   {modalTemario.formasPago.metodos.map((m, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '6px' }}>
-                      <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#C5A880', flexShrink: 0, display: 'inline-block', marginTop: '5px' }} />
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                      {getMetodoIcon(m)}
                       <span style={{ fontSize: '12px', color: '#A3A3A8' }}>{m}</span>
                     </div>
                   ))}
@@ -314,7 +330,7 @@ export default function Courses({ onPreselect }) {
             </div>
           </div>
         </div>
-      )}
+      , document.body)}
     </>
   )
 }

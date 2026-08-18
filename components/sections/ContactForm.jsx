@@ -2,12 +2,16 @@
 
 import { useState, useEffect } from 'react'
 import { CURSOS } from '@/lib/cursos'
+import { Landmark, CreditCard, Banknote } from 'lucide-react'
 
 const PAY_LABELS = {
-  card: 'Tarjeta / MP',
+  card: 'Tarjeta de crédito o débito',
   bank: 'Transferencia',
   cash: 'Efectivo',
+  paypal: 'PayPal',
 }
+
+const PAYPAL_PATH = 'M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.291-.077.443-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.1zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.506l-.24 1.516a.56.56 0 0 0 .554.647h3.882c.46 0 .85-.334.922-.788.06-.26.76-4.852.816-5.09a.932.932 0 0 1 .923-.788h.58c3.76 0 6.705-1.528 7.565-5.946.36-1.847.174-3.388-.777-4.471z'
 
 function getCurso(nombre) {
   return CURSOS.find(c => c.nombre === nombre)
@@ -192,6 +196,7 @@ export default function ContactForm({ preselectedCourse }) {
   }
 
   const cursoSoldOut = !!(curso && getCurso(curso)?.soldOut)
+  const isOnline = getCurso(curso)?.modalidad === 'Online'
 
   const sectionHeader = (
     <div className="sec-hd">
@@ -333,7 +338,7 @@ export default function ContactForm({ preselectedCourse }) {
               <div id="step-screen-2">
                 <div className="fg">
                   <label>Curso de interés</label>
-                  <select className="fc" value={curso} onChange={e => { setCurso(e.target.value); setGrupo(''); setKitSeleccionado(false); clearError('curso'); clearError('grupo') }}>
+                  <select className="fc" value={curso} onChange={e => { setCurso(e.target.value); setGrupo(''); setKitSeleccionado(false); setPayMethod(''); clearError('curso'); clearError('grupo') }}>
                     <option value="">Seleccioná un curso</option>
                     {CURSOS.map(c => (
                       <option key={c.id} value={c.nombre}>{c.nombre}</option>
@@ -396,7 +401,10 @@ export default function ContactForm({ preselectedCourse }) {
                     {getCurso(curso)?.kit?.disponible && (
                       <div className="fg">
                         <label>¿Querés sumar el kit de materiales?</label>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+                        <p style={{ fontSize: '12px', color: '#666666', lineHeight: '1.6', marginBottom: '14px' }}>
+                          Opcional. Todos los materiales de práctica están incluidos en el curso. El kit es para que puedas empezar a trabajar de forma independiente al terminar.
+                        </p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                           {[
                             { value: false, label: 'No por ahora' },
                             { value: true, label: `Sí, quiero el kit — $${getCurso(curso).kit.precio.toLocaleString('es-AR')}` },
@@ -457,18 +465,31 @@ export default function ContactForm({ preselectedCourse }) {
                 <div className="fg">
                   <label>Método de pago</label>
                   <div className="pay-methods">
-                    <div className={`pm${payMethod === 'card' ? ' sel' : ''}`} onClick={() => { setPayMethod('card'); clearError('payMethod') }}>
-                      <div className="pm-icon">💳</div>
-                      <div className="pm-label">Tarjeta / MP</div>
-                    </div>
-                    <div className={`pm${payMethod === 'bank' ? ' sel' : ''}`} onClick={() => { setPayMethod('bank'); clearError('payMethod') }}>
-                      <div className="pm-icon">🏦</div>
-                      <div className="pm-label">Transferencia</div>
-                    </div>
-                    <div className={`pm${payMethod === 'cash' ? ' sel' : ''}`} onClick={() => { setPayMethod('cash'); clearError('payMethod') }}>
-                      <div className="pm-icon">💵</div>
-                      <div className="pm-label">Efectivo</div>
-                    </div>
+                    {(isOnline
+                      ? [
+                          { key: 'bank', icon: <Landmark size={22} color="#A3A3A8" />, label: 'Transferencia bancaria' },
+                          { key: 'card', icon: <CreditCard size={22} color="#A3A3A8" />, label: 'Tarjeta de crédito o débito — 10% de recargo' },
+                          { key: 'paypal', icon: (
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="#009CDE">
+                              <path d={PAYPAL_PATH} />
+                            </svg>
+                          ), label: 'PayPal' },
+                        ]
+                      : [
+                          { key: 'cash', icon: <Banknote size={22} color="#A3A3A8" />, label: 'Efectivo — 10% de descuento' },
+                          { key: 'bank', icon: <Landmark size={22} color="#A3A3A8" />, label: 'Transferencia bancaria' },
+                          { key: 'card', icon: <CreditCard size={22} color="#A3A3A8" />, label: 'Tarjeta de crédito o débito — 10% de recargo' },
+                        ]
+                    ).map(opt => (
+                      <div
+                        key={opt.key}
+                        className={`pm${payMethod === opt.key ? ' sel' : ''}`}
+                        onClick={() => { setPayMethod(opt.key); clearError('payMethod') }}
+                      >
+                        <div className="pm-icon" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>{opt.icon}</div>
+                        <div className="pm-label">{opt.label}</div>
+                      </div>
+                    ))}
                   </div>
                   {fieldError('payMethod')}
                 </div>
