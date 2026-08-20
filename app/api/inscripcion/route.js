@@ -1,5 +1,6 @@
 import { Resend } from 'resend'
 import { CURSOS } from '@/lib/cursos'
+import supabaseAdmin from '@/lib/supabaseAdmin'
 
 const FROM_EMAIL = 'Lashes Beauty Academy <inscripciones@lashesbeautyok.com>'
 
@@ -225,6 +226,21 @@ export async function POST(request) {
         { status: 500 },
       )
     }
+
+    try {
+      await supabaseAdmin.from('alumnas').insert({
+        nombre,
+        apellido: apellido || null,
+        whatsapp,
+        curso_id: cursoData?.id || null,
+        grupo: grupo || null,
+        kit: !!kit,
+        notas: null,
+        origen: 'web',
+        fecha_inscripcion: new Date().toISOString().split('T')[0],
+        curso_finalizado: false,
+      })
+    } catch {}
 
     return Response.json({ ok: true, id: data?.id }, { status: 200 })
   } catch (err) {
