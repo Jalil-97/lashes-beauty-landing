@@ -25,15 +25,12 @@ export async function GET(request) {
   const { data, error } = await query
   if (error) return Response.json({ error: error.message }, { status: 500 })
 
-  const cursoData = CURSOS.find(c => c.id === curso_id)
-  const precio = cursoData?.precio ?? 0
-  const precioKitBase = cursoData?.kit?.disponible ? cursoData.kit.precio : 0
-
   const alumnas = data.map(a => {
     const totalPagado = (a.pagos || []).reduce((sum, p) => sum + Number(p.monto), 0)
-    const precioKit = a.kit ? precioKitBase : 0
-    const total = precio + precioKit
-    return { ...a, precio, precioKit, total, totalPagado, saldoPendiente: total - totalPagado }
+    // Use frozen price fields stored at inscription time, not live cursos.js lookup
+    const precioKit = a.kit ? (a.precio_kit || 0) : 0
+    const total = (a.precio || 0) + precioKit
+    return { ...a, total, totalPagado, saldoPendiente: total - totalPagado }
   })
 
   return Response.json({ ok: true, alumnas })
@@ -59,6 +56,10 @@ export async function POST(request) {
     )
   }
 
+  // Freeze course data at inscription time so future price/name changes don't affect this record
+  const cursoData = CURSOS.find(c => c.id === curso_id)
+  const precioKit = cursoData?.kit?.disponible ? cursoData.kit.precio : null
+
   const { data, error } = await supabaseAdmin
     .from('alumnas')
     .insert({
@@ -72,6 +73,10 @@ export async function POST(request) {
       origen: 'manual',
       fecha_inscripcion: new Date().toISOString().split('T')[0],
       curso_finalizado: false,
+      curso_nombre: cursoData?.nombre ?? null,
+      fecha_inicio: cursoData?.fechas ?? null,
+      precio: cursoData?.precio ?? null,
+      precio_kit: precioKit,
     })
     .select()
     .single()

@@ -239,6 +239,11 @@ export async function POST(request) {
         origen: 'web',
         fecha_inscripcion: new Date().toISOString().split('T')[0],
         curso_finalizado: false,
+        // Freeze course data at inscription time
+        curso_nombre: cursoData?.nombre ?? null,
+        fecha_inicio: cursoData?.fechas ?? null,
+        precio: cursoData?.precio ?? null,
+        precio_kit: cursoData?.kit?.disponible ? cursoData.kit.precio : null,
       })
     } catch {}
 

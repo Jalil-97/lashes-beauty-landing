@@ -313,7 +313,7 @@ export default function ContactForm({ preselectedCourse }) {
                 </div>
                 <div className="fg">
                   <label>WhatsApp</label>
-                  <input className="fc" type="tel" placeholder="+54 11 ..."
+                  <input className="fc" type="tel" placeholder="Ej: 1123456789 (con código de área, sin el 15)"
                     value={whatsapp} onChange={e => { setWhatsapp(e.target.value); clearError('whatsapp') }} />
                   {fieldError('whatsapp')}
                 </div>
