@@ -466,6 +466,7 @@ export default function AdminDashboard() {
   const [exportContactosMsg, setExportContactosMsg] = useState(null)
   const [exportingContactos, setExportingContactos] = useState(false)
   const [exportingBackup, setExportingBackup] = useState(false)
+  const [visitedCounts, setVisitedCounts] = useState({})
 
   // ── Derived course structure ──────────────────────────────────────────────
 
@@ -495,6 +496,18 @@ export default function AdminDashboard() {
     [pagoAlumnaId, alumnas]
   )
 
+  // Per-course count of alumnas added since last visit (sourced from localStorage vs API alumnaCount)
+  const courseBadges = useMemo(() => {
+    const badges = {}
+    for (const opt of options) {
+      const key = `lba_visited_${opt.curso_id}_${opt.grupo || ''}`
+      if (!(key in visitedCounts)) continue
+      const diff = Math.max(0, opt.alumnaCount - visitedCounts[key])
+      if (diff > 0) badges[opt.curso_id] = (badges[opt.curso_id] || 0) + diff
+    }
+    return badges
+  }, [options, visitedCounts])
+
   // Active (non-finalized) groups for courses with grupos
   const activeGroups = useMemo(
     () => (selectedCourse?.hasGrupos ? selectedCourse.options.filter(o => !o.finalizado) : []),
@@ -512,6 +525,36 @@ export default function AdminDashboard() {
   }, [])
 
   useEffect(() => { fetchCursos() }, [fetchCursos])
+
+  // Load all previously-visited edition counts from localStorage on mount
+  useEffect(() => {
+    try {
+      const result = {}
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key?.startsWith('lba_visited_')) {
+          const raw = localStorage.getItem(key)
+          if (raw) {
+            const parsed = JSON.parse(raw)
+            result[key] = parsed.count ?? 0
+          }
+        }
+      }
+      setVisitedCounts(result)
+    } catch {}
+  }, [])
+
+  // When entering an edition's detail, persist current alumnaCount as "seen" in localStorage
+  useEffect(() => {
+    if (!selectedKey || !selectedOption) return
+    const { curso_id, grupo } = parseKey(selectedKey)
+    const key = `lba_visited_${curso_id}_${grupo || ''}`
+    const count = selectedOption.alumnaCount
+    try {
+      localStorage.setItem(key, JSON.stringify({ count, ts: new Date().toISOString() }))
+    } catch {}
+    setVisitedCounts(prev => prev[key] === count ? prev : { ...prev, [key]: count })
+  }, [selectedKey, selectedOption?.alumnaCount])
 
   const fetchAlumnas = useCallback(async (key) => {
     if (!key) { setAlumnas([]); return [] }
@@ -833,6 +876,7 @@ export default function AdminDashboard() {
           .adm-selects { gap: 10px; }
           .adm-sel-wrap { width: 100%; }
           .adm-no-editions { width: 100%; }
+          .adm-btn-backup { display: none; }
         }
         @media (max-width: 520px) {
           .adm-metrics { grid-template-columns: 1fr 1fr; }
@@ -853,6 +897,7 @@ export default function AdminDashboard() {
             {showFinalizados ? '← Volver' : 'Finalizados'}
           </button>
           <button
+            className="adm-btn-backup"
             onClick={handleExportBackup}
             disabled={exportingBackup}
             style={{ ...btnGhostSm, fontSize: '.78rem', opacity: exportingBackup ? .6 : 1 }}
@@ -918,7 +963,9 @@ export default function AdminDashboard() {
                 >
                   <option value="">— Elegí un curso —</option>
                   {courses.map(c => (
-                    <option key={c.curso_id} value={c.curso_id}>{c.nombre}</option>
+                    <option key={c.curso_id} value={c.curso_id}>
+                      {c.nombre}{courseBadges[c.curso_id] ? ` (${courseBadges[c.curso_id]})` : ''}
+                    </option>
                   ))}
                 </select>
               </div>
