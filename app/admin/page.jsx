@@ -244,13 +244,14 @@ function EditAlumnaModal({ alumna, onClose, onSave, loading }) {
 
 // ─── AddPagoModal ─────────────────────────────────────────────────────────────
 
-function AddPagoModal({ alumna, onClose, onSave, onEditPago, loading }) {
+function AddPagoModal({ alumna, onClose, onSave, onEditPago, onDeletePago, loading }) {
   const today = new Date().toISOString().split('T')[0]
   const [form, setForm] = useState({ monto: '', medio: 'transferencia', fecha: today, nota: '' })
   const [editingPago, setEditingPago] = useState(null)
   const [editForm, setEditForm] = useState({})
   const [error, setError] = useState('')
   const [overpaymentPending, setOverpaymentPending] = useState(null)
+  const [confirmDeletePago, setConfirmDeletePago] = useState(null)
 
   const pagos = [...(alumna.pagos || [])].sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
 
@@ -353,7 +354,10 @@ function AddPagoModal({ alumna, onClose, onSave, onEditPago, loading }) {
                             {fmtDate(p.fecha)} · {p.medio}{p.nota ? ` · ${p.nota}` : ''}
                           </span>
                         </div>
-                        <button style={btnGhostSm} onClick={() => startEdit(p)}>Editar</button>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button style={btnGhostSm} onClick={() => startEdit(p)}>Editar</button>
+                          <button style={{ ...btnGhostSm, color: '#f87171', borderColor: 'rgba(239,68,68,.3)' }} onClick={() => setConfirmDeletePago(p)}>Eliminar</button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -411,6 +415,17 @@ function AddPagoModal({ alumna, onClose, onSave, onEditPago, loading }) {
           confirmLabel="Confirmar pago"
         />
       )}
+      {confirmDeletePago && (
+        <ConfirmModal
+          title="Eliminar pago"
+          message={`¿Eliminás el pago de ${fmt(confirmDeletePago.monto)} del ${fmtDate(confirmDeletePago.fecha)}?`}
+          warning="Esta acción no se puede deshacer."
+          onConfirm={() => { onDeletePago(confirmDeletePago.id); setConfirmDeletePago(null) }}
+          onCancel={() => setConfirmDeletePago(null)}
+          loading={loading}
+          confirmLabel="Eliminar pago"
+        />
+      )}
     </>
   )
 }
@@ -451,7 +466,8 @@ export default function AdminDashboard() {
   const [alumnas, setAlumnas] = useState([])
   const [loadingAlumnas, setLoadingAlumnas] = useState(false)
   const [search, setSearch] = useState('')
-  const [sortAsc, setSortAsc] = useState(false)
+  const [sortCol, setSortCol] = useState('fecha')
+  const [sortAsc, setSortAsc] = useState(true)
   const [filter, setFilter] = useState('all')
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingAlumna, setEditingAlumna] = useState(null)
@@ -607,9 +623,13 @@ export default function AdminDashboard() {
       return a.nombre.toLowerCase().includes(q) || a.apellido.toLowerCase().includes(q) || (a.whatsapp || '').includes(q)
     })
     .sort((a, b) => {
-      const diff = new Date(a.fecha_inscripcion) - new Date(b.fecha_inscripcion)
+      let diff
+      if (sortCol === 'nombre') diff = `${a.apellido} ${a.nombre}`.localeCompare(`${b.apellido} ${b.nombre}`, 'es')
+      else if (sortCol === 'pagado') diff = (a.totalPagado || 0) - (b.totalPagado || 0)
+      else if (sortCol === 'saldo') diff = (a.saldoPendiente || 0) - (b.saldoPendiente || 0)
+      else diff = new Date(a.fecha_inscripcion) - new Date(b.fecha_inscripcion)
       return sortAsc ? diff : -diff
-    }), [alumnas, filter, search, sortAsc])
+    }), [alumnas, filter, search, sortCol, sortAsc])
 
   // IDs of alumnas occupying slot 7+ sorted by fecha_inscripcion (not affected by display sort)
   const sobreCapacidadIds = useMemo(() => {
@@ -796,12 +816,27 @@ export default function AdminDashboard() {
     finally { setExportingBackup(false) }
   }
 
+  function handleSort(col) {
+    if (sortCol === col) setSortAsc(v => !v)
+    else { setSortCol(col); setSortAsc(true) }
+  }
+
+  async function handleDeletePago(pagoId) {
+    setActionLoading(true)
+    try {
+      await fetch(`/api/admin/pagos/${pagoId}`, { method: 'DELETE' })
+      await fetchAlumnas(selectedKey)
+    } catch {}
+    finally { setActionLoading(false) }
+  }
+
   function handleSelectCurso(cursoId) {
     setSelectedCursoId(cursoId)
     setSelectedGrupoName('')
     setSearch('')
     setFilter('all')
-    setSortAsc(false)
+    setSortCol('fecha')
+    setSortAsc(true)
     setFinalizarError('')
     setExportContactosMsg(null)
   }
@@ -810,7 +845,8 @@ export default function AdminDashboard() {
     setSelectedGrupoName(value)
     setSearch('')
     setFilter('all')
-    setSortAsc(false)
+    setSortCol('fecha')
+    setSortAsc(true)
     setFinalizarError('')
     setExportContactosMsg(null)
   }
@@ -827,7 +863,8 @@ export default function AdminDashboard() {
     setShowFinalizados(false)
     setSearch('')
     setFilter('all')
-    setSortAsc(false)
+    setSortCol('fecha')
+    setSortAsc(true)
     setFinalizarError('')
   }
 
@@ -866,6 +903,7 @@ export default function AdminDashboard() {
         .adm-fin-row:hover { border-color: rgba(247,168,184,.25); }
         .fc { width: 100%; box-sizing: border-box; background: var(--bk); border: 1px solid var(--mg); border-radius: 5px; padding: 9px 12px; color: var(--wh); font-family: var(--fb); font-size: .85rem; outline: none; }
         .fc:focus { border-color: var(--pk); }
+        .adm-sort-mobile { display: none; }
         @media (max-width: 900px) { .adm-metrics { grid-template-columns: repeat(2,1fr); } }
         @media (max-width: 768px) {
           .adm-topbar { padding: 0 16px; }
@@ -877,6 +915,7 @@ export default function AdminDashboard() {
           .adm-sel-wrap { width: 100%; }
           .adm-no-editions { width: 100%; }
           .adm-btn-backup { display: none; }
+          .adm-sort-mobile { display: block; background: var(--bk); border: 1px solid var(--mg); border-radius: 5px; padding: 7px 10px; color: var(--wh); font-family: var(--fb); font-size: .83rem; outline: none; }
         }
         @media (max-width: 520px) {
           .adm-metrics { grid-template-columns: 1fr 1fr; }
@@ -1093,9 +1132,7 @@ export default function AdminDashboard() {
                     >
                       {exportingContactos ? 'Generando...' : '↓ Exportar contactos'}
                     </button>
-                    <span style={{ fontSize: '.71rem', color: 'var(--mt)', maxWidth: 300, lineHeight: 1.4 }}>
-                      Se exportan solo las alumnas nuevas desde la última vez. Los contactos importados quedan guardados en tu teléfono de forma permanente, salvo que los borres a mano.
-                    </span>
+      
                   </div>
                 </div>
 
@@ -1126,9 +1163,23 @@ export default function AdminDashboard() {
                     placeholder="Buscar por nombre o teléfono..."
                     value={search} onChange={e => setSearch(e.target.value)}
                   />
-                  <button style={btnGhostSm} onClick={() => setSortAsc(v => !v)}>
-                    Fecha {sortAsc ? '↑ asc' : '↓ desc'}
-                  </button>
+                  <select
+                    className="adm-sort-mobile"
+                    value={`${sortCol}-${sortAsc ? 'asc' : 'desc'}`}
+                    onChange={e => {
+                      const [col, dir] = e.target.value.split('-')
+                      setSortCol(col); setSortAsc(dir === 'asc')
+                    }}
+                  >
+                    <option value="fecha-asc">Fecha ↑</option>
+                    <option value="fecha-desc">Fecha ↓</option>
+                    <option value="nombre-asc">Nombre ↑</option>
+                    <option value="nombre-desc">Nombre ↓</option>
+                    <option value="pagado-asc">Pagado ↑</option>
+                    <option value="pagado-desc">Pagado ↓</option>
+                    <option value="saldo-asc">Saldo ↑</option>
+                    <option value="saldo-desc">Saldo ↓</option>
+                  </select>
                   <div className="adm-filters">
                     {[{ id: 'all', label: 'Todas' }, { id: 'debe', label: 'Debe saldo' }, { id: 'kit', label: 'Con kit' }].map(f => (
                       <button key={f.id} className={`adm-ftab${filter === f.id ? ' on' : ''}`} onClick={() => setFilter(f.id)}>
@@ -1154,11 +1205,17 @@ export default function AdminDashboard() {
                     <table className="adm-table">
                       <thead>
                         <tr>
-                          <th>Fecha</th>
-                          <th>Nombre</th>
+                          {[['fecha','Fecha'],['nombre','Nombre']].map(([col,label]) => (
+                            <th key={col} onClick={() => handleSort(col)} style={{ cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' }}>
+                              {label} {sortCol === col ? (sortAsc ? '↑' : '↓') : '↕'}
+                            </th>
+                          ))}
                           <th>Kit</th>
-                          <th>Pagado / Total</th>
-                          <th>Saldo</th>
+                          {[['pagado','Pagado / Total'],['saldo','Saldo']].map(([col,label]) => (
+                            <th key={col} onClick={() => handleSort(col)} style={{ cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' }}>
+                              {label} {sortCol === col ? (sortAsc ? '↑' : '↓') : '↕'}
+                            </th>
+                          ))}
                           <th>WhatsApp</th>
                           <th></th>
                         </tr>
@@ -1277,6 +1334,7 @@ export default function AdminDashboard() {
           onClose={() => setPagoAlumnaId(null)}
           onSave={handleAddPago}
           onEditPago={handleEditPago}
+          onDeletePago={handleDeletePago}
           loading={actionLoading}
         />
       )}
