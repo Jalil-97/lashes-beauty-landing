@@ -896,14 +896,15 @@ export default function AdminDashboard() {
           >
             {showFinalizados ? '← Volver' : 'Finalizados'}
           </button>
-          <button
-            className="adm-btn-backup"
-            onClick={handleExportBackup}
-            disabled={exportingBackup}
-            style={{ ...btnGhostSm, fontSize: '.78rem', opacity: exportingBackup ? .6 : 1 }}
-          >
-            {exportingBackup ? 'Generando...' : 'Exportar backup'}
-          </button>
+          <span className="adm-btn-backup">
+            <button
+              onClick={handleExportBackup}
+              disabled={exportingBackup}
+              style={{ ...btnGhostSm, fontSize: '.78rem', opacity: exportingBackup ? .6 : 1 }}
+            >
+              {exportingBackup ? 'Generando...' : 'Exportar backup'}
+            </button>
+          </span>
           <button onClick={handleLogout} style={{ ...btnGhostSm, fontSize: '.78rem' }}>Salir</button>
         </div>
       </div>
