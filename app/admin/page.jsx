@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -483,6 +483,8 @@ export default function AdminDashboard() {
   const [exportingContactos, setExportingContactos] = useState(false)
   const [exportingBackup, setExportingBackup] = useState(false)
   const [visitedCounts, setVisitedCounts] = useState({})
+  const [courseDropdownOpen, setCourseDropdownOpen] = useState(false)
+  const courseDropdownRef = useRef(null)
 
   // ── Derived course structure ──────────────────────────────────────────────
 
@@ -571,6 +573,17 @@ export default function AdminDashboard() {
     } catch {}
     setVisitedCounts(prev => prev[key] === count ? prev : { ...prev, [key]: count })
   }, [selectedKey, selectedOption?.alumnaCount])
+
+  useEffect(() => {
+    if (!courseDropdownOpen) return
+    function handleOutsideClick(e) {
+      if (courseDropdownRef.current && !courseDropdownRef.current.contains(e.target)) {
+        setCourseDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleOutsideClick)
+    return () => document.removeEventListener('mousedown', handleOutsideClick)
+  }, [courseDropdownOpen])
 
   const fetchAlumnas = useCallback(async (key) => {
     if (!key) { setAlumnas([]); return [] }
@@ -904,6 +917,14 @@ export default function AdminDashboard() {
         .fc { width: 100%; box-sizing: border-box; background: var(--bk); border: 1px solid var(--mg); border-radius: 5px; padding: 9px 12px; color: var(--wh); font-family: var(--fb); font-size: .85rem; outline: none; }
         .fc:focus { border-color: var(--pk); }
         .adm-sort-mobile { display: none; }
+        .adm-course-btn { appearance: none; width: 100%; background: var(--bk); border: 1px solid var(--mg); border-radius: 5px; padding: 10px 14px; color: var(--wh); font-family: var(--fb); font-size: .88rem; outline: none; min-width: 200px; max-width: 400px; text-align: left; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 8px; box-sizing: border-box; }
+        .adm-course-btn:focus { border-color: var(--pk); }
+        .adm-course-dropdown { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--dg); border: 1px solid var(--mg); border-radius: 7px; z-index: 200; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,.5); }
+        .adm-course-option { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 10px 14px; background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,.05); color: var(--wh); font-family: var(--fb); font-size: .88rem; cursor: pointer; text-align: left; gap: 8px; }
+        .adm-course-option:last-child { border-bottom: none; }
+        .adm-course-option:hover { background: rgba(255,255,255,.06); }
+        .adm-course-option.adm-selected { color: var(--pk); }
+        .adm-course-badge { background: #e03131; color: #fff; border-radius: 999px; padding: 2px 8px; font-size: .7rem; font-weight: 700; min-width: 20px; text-align: center; line-height: 1.4; flex-shrink: 0; }
         @media (max-width: 900px) { .adm-metrics { grid-template-columns: repeat(2,1fr); } }
         @media (max-width: 768px) {
           .adm-topbar { padding: 0 16px; }
@@ -911,6 +932,7 @@ export default function AdminDashboard() {
           .adm-table-wrap { display: none; }
           .adm-mobile-list { display: flex; }
           .adm-select { min-width: 0; max-width: 100%; width: 100%; }
+          .adm-course-btn { min-width: 0; max-width: 100%; width: 100%; }
           .adm-selects { gap: 10px; }
           .adm-sel-wrap { width: 100%; }
           .adm-no-editions { width: 100%; }
@@ -996,18 +1018,37 @@ export default function AdminDashboard() {
               {/* Level 1: all courses, always */}
               <div className="adm-sel-wrap">
                 <label style={lblStyle}>Curso</label>
-                <select
-                  className="adm-select"
-                  value={selectedCursoId}
-                  onChange={e => handleSelectCurso(e.target.value)}
-                >
-                  <option value="">— Elegí un curso —</option>
-                  {courses.map(c => (
-                    <option key={c.curso_id} value={c.curso_id}>
-                      {c.nombre}{courseBadges[c.curso_id] ? ` (${courseBadges[c.curso_id]})` : ''}
-                    </option>
-                  ))}
-                </select>
+                <div ref={courseDropdownRef} style={{ position: 'relative' }}>
+                  <button
+                    className="adm-course-btn"
+                    onClick={() => setCourseDropdownOpen(v => !v)}
+                  >
+                    <span>{courses.find(c => c.curso_id === selectedCursoId)?.nombre || '— Elegí un curso —'}</span>
+                    <span style={{ opacity: .5, fontSize: '.75rem' }}>{courseDropdownOpen ? '▲' : '▼'}</span>
+                  </button>
+                  {courseDropdownOpen && (
+                    <div className="adm-course-dropdown">
+                      <button
+                        className={`adm-course-option${selectedCursoId === '' ? ' adm-selected' : ''}`}
+                        onClick={() => { handleSelectCurso(''); setCourseDropdownOpen(false) }}
+                      >
+                        <span style={{ color: 'var(--mt)' }}>— Elegí un curso —</span>
+                      </button>
+                      {courses.map(c => (
+                        <button
+                          key={c.curso_id}
+                          className={`adm-course-option${selectedCursoId === c.curso_id ? ' adm-selected' : ''}`}
+                          onClick={() => { handleSelectCurso(c.curso_id); setCourseDropdownOpen(false) }}
+                        >
+                          <span>{c.nombre}</span>
+                          {courseBadges[c.curso_id] ? (
+                            <span className="adm-course-badge">{courseBadges[c.curso_id]}</span>
+                          ) : null}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Level 2: always shown when a course is selected */}
