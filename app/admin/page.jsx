@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { CURSOS } from '@/lib/cursos'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -146,7 +147,7 @@ function ConfirmModal({ title, message, warning, onConfirm, onCancel, loading, c
 
 // ─── AddAlumnaModal ───────────────────────────────────────────────────────────
 
-function AddAlumnaModal({ onClose, onSave, loading }) {
+function AddAlumnaModal({ onClose, onSave, loading, kitDisponible }) {
   const [form, setForm] = useState({ nombre: '', apellido: '', whatsapp: '', kit: false, notas: '' })
   const [error, setError] = useState('')
 
@@ -173,9 +174,9 @@ function AddAlumnaModal({ onClose, onSave, loading }) {
             <label style={lblStyle}>WhatsApp</label>
             <input className="fc" required value={form.whatsapp} onChange={e => setForm(f => ({ ...f, whatsapp: e.target.value }))} placeholder="11 1234-5678" />
           </div>
-          <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <input type="checkbox" id="add-kit" checked={form.kit} onChange={e => setForm(f => ({ ...f, kit: e.target.checked }))} style={{ accentColor: 'var(--pk)', width: 16, height: 16 }} />
-            <label htmlFor="add-kit" style={{ color: 'var(--wh)', fontSize: '.87rem', cursor: 'pointer' }}>Incluye kit de materiales</label>
+          <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10, opacity: kitDisponible ? 1 : 0.4 }}>
+            <input type="checkbox" id="add-kit" checked={form.kit} onChange={e => setForm(f => ({ ...f, kit: e.target.checked }))} style={{ accentColor: 'var(--pk)', width: 16, height: 16 }} disabled={!kitDisponible} />
+            <label htmlFor="add-kit" style={{ color: 'var(--wh)', fontSize: '.87rem', cursor: kitDisponible ? 'pointer' : 'not-allowed' }}>Incluye kit de materiales</label>
           </div>
           <div style={{ marginBottom: 4 }}>
             <label style={lblStyle}>Notas (opcional)</label>
@@ -195,6 +196,7 @@ function AddAlumnaModal({ onClose, onSave, loading }) {
 // ─── EditAlumnaModal ──────────────────────────────────────────────────────────
 
 function EditAlumnaModal({ alumna, onClose, onSave, loading }) {
+  const kitDisponible = CURSOS.find(c => c.id === alumna.curso_id)?.kit?.disponible ?? true
   const [form, setForm] = useState({
     nombre: alumna.nombre, apellido: alumna.apellido,
     whatsapp: alumna.whatsapp, kit: alumna.kit, notas: alumna.notas || '',
@@ -224,9 +226,9 @@ function EditAlumnaModal({ alumna, onClose, onSave, loading }) {
             <label style={lblStyle}>WhatsApp</label>
             <input className="fc" required value={form.whatsapp} onChange={e => setForm(f => ({ ...f, whatsapp: e.target.value }))} />
           </div>
-          <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <input type="checkbox" id="edit-kit" checked={form.kit} onChange={e => setForm(f => ({ ...f, kit: e.target.checked }))} style={{ accentColor: 'var(--pk)', width: 16, height: 16 }} />
-            <label htmlFor="edit-kit" style={{ color: 'var(--wh)', fontSize: '.87rem', cursor: 'pointer' }}>Incluye kit de materiales</label>
+          <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10, opacity: kitDisponible ? 1 : 0.4 }}>
+            <input type="checkbox" id="edit-kit" checked={form.kit} onChange={e => setForm(f => ({ ...f, kit: e.target.checked }))} style={{ accentColor: 'var(--pk)', width: 16, height: 16 }} disabled={!kitDisponible} />
+            <label htmlFor="edit-kit" style={{ color: 'var(--wh)', fontSize: '.87rem', cursor: kitDisponible ? 'pointer' : 'not-allowed' }}>Incluye kit de materiales</label>
           </div>
           <div style={{ marginBottom: 4 }}>
             <label style={lblStyle}>Notas</label>
@@ -1363,7 +1365,12 @@ export default function AdminDashboard() {
       {/* ── Modals ────────────────────────────────────────────────────────── */}
 
       {showAddModal && (
-        <AddAlumnaModal onClose={() => setShowAddModal(false)} onSave={handleAddAlumna} loading={actionLoading} />
+        <AddAlumnaModal
+          onClose={() => setShowAddModal(false)}
+          onSave={handleAddAlumna}
+          loading={actionLoading}
+          kitDisponible={CURSOS.find(c => c.id === selectedCursoId)?.kit?.disponible ?? true}
+        />
       )}
 
       {editingAlumna && (
