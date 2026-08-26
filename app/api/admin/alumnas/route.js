@@ -58,7 +58,7 @@ export async function POST(request) {
 
   // Freeze course data at inscription time so future price/name changes don't affect this record
   const cursoData = CURSOS.find(c => c.id === curso_id)
-  const precioKit = cursoData?.kit?.disponible ? cursoData.kit.precio : null
+  const precioKitDisponible = cursoData?.kit?.precio ?? null
 
   const { data, error } = await supabaseAdmin
     .from('alumnas')
@@ -76,7 +76,8 @@ export async function POST(request) {
       curso_nombre: cursoData?.nombre ?? null,
       fecha_inicio: cursoData?.fechas ?? null,
       precio: cursoData?.precio ?? null,
-      precio_kit: precioKit,
+      precio_kit_disponible: precioKitDisponible,
+      precio_kit: !!kit ? (precioKitDisponible ?? 0) : 0,
     })
     .select()
     .single()

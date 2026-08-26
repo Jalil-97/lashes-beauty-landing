@@ -20,10 +20,11 @@ function fmtDate(dateStr) {
   return `${d}/${m}/${y}`
 }
 
-function buildWaLink(phone) {
+function buildWaLink(phone, nombre) {
   const digits = (phone || '').replace(/\D/g, '')
   const cleaned = digits.startsWith('15') ? '11' + digits.slice(2) : digits
-  return `https://wa.me/549${cleaned}`
+  const text = nombre ? `?text=${encodeURIComponent(`Hola ${nombre}!`)}` : ''
+  return `https://wa.me/549${cleaned}${text}`
 }
 
 function parseKey(key) {
@@ -1286,7 +1287,7 @@ export default function AdminDashboard() {
                             </td>
                             <td>
                               {a.whatsapp
-                                ? <a href={buildWaLink(a.whatsapp)} target="_blank" rel="noopener noreferrer" style={{ color: '#25D366', fontWeight: 500, fontSize: '.84rem', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: 4 }}>{WA_ICON}{a.whatsapp}</a>
+                                ? <a href={buildWaLink(a.whatsapp, a.nombre)} target="_blank" rel="noopener noreferrer" style={{ color: '#25D366', fontWeight: 500, fontSize: '.84rem', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: 4 }}>{WA_ICON}{a.whatsapp}</a>
                                 : <span style={{ color: 'var(--mt)', fontSize: '.8rem' }}>Sin teléfono</span>
                               }
                             </td>
@@ -1322,7 +1323,7 @@ export default function AdminDashboard() {
                           <MobileField label="Fecha">{fmtDate(a.fecha_inscripcion)}</MobileField>
                           <MobileField label="WhatsApp">
                             {a.whatsapp
-                              ? <a href={buildWaLink(a.whatsapp)} target="_blank" rel="noopener noreferrer" style={{ color: '#25D366', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 4 }}>{WA_ICON}{a.whatsapp}</a>
+                              ? <a href={buildWaLink(a.whatsapp, a.nombre)} target="_blank" rel="noopener noreferrer" style={{ color: '#25D366', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 4 }}>{WA_ICON}{a.whatsapp}</a>
                               : <span style={{ color: 'var(--mt)' }}>Sin teléfono</span>
                             }
                           </MobileField>

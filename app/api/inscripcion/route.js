@@ -228,6 +228,7 @@ export async function POST(request) {
     }
 
     try {
+      const precioKitDisponible = cursoData?.kit?.precio ?? null
       await supabaseAdmin.from('alumnas').insert({
         nombre,
         apellido: apellido || null,
@@ -243,7 +244,8 @@ export async function POST(request) {
         curso_nombre: cursoData?.nombre ?? null,
         fecha_inicio: cursoData?.fechas ?? null,
         precio: cursoData?.precio ?? null,
-        precio_kit: cursoData?.kit?.disponible ? cursoData.kit.precio : null,
+        precio_kit_disponible: precioKitDisponible,
+        precio_kit: !!kit ? (precioKitDisponible ?? 0) : 0,
       })
     } catch {}
 

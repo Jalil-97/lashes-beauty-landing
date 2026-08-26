@@ -36,8 +36,17 @@ export async function PATCH(request, ctx) {
   if (nombre !== undefined) updates.nombre = nombre
   if (apellido !== undefined) updates.apellido = apellido
   if (whatsapp !== undefined) updates.whatsapp = whatsapp
-  if (kit !== undefined) updates.kit = !!kit
   if (notas !== undefined) updates.notas = notas
+
+  if (kit !== undefined) {
+    updates.kit = !!kit
+    const { data: alumna } = await supabaseAdmin
+      .from('alumnas')
+      .select('precio_kit_disponible')
+      .eq('id', id)
+      .single()
+    updates.precio_kit = !!kit ? (alumna?.precio_kit_disponible ?? 0) : 0
+  }
 
   if (Object.keys(updates).length === 0) {
     return Response.json({ error: 'No hay campos para actualizar' }, { status: 400 })
