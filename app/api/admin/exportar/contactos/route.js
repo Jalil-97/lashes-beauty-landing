@@ -31,21 +31,18 @@ export async function GET(request) {
   if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 })
 
   const { searchParams } = new URL(request.url)
-  const curso_id = searchParams.get('curso_id')
-  const grupo = searchParams.get('grupo') || null
+  const edicion_id = searchParams.get('edicion_id')
 
-  if (!curso_id) {
-    return Response.json({ error: 'curso_id requerido' }, { status: 400 })
+  if (!edicion_id) {
+    return Response.json({ error: 'edicion_id requerido' }, { status: 400 })
   }
 
   // Use or() to catch both false and NULL — SQL's "col = false" excludes NULLs silently
-  let query = supabaseAdmin
+  const query = supabaseAdmin
     .from('alumnas')
     .select('id, nombre, apellido, whatsapp, curso_nombre, grupo, fecha_inicio, contacto_exportado')
-    .eq('curso_id', curso_id)
+    .eq('edicion_id', edicion_id)
     .or('contacto_exportado.eq.false,contacto_exportado.is.null')
-
-  if (grupo) query = query.eq('grupo', grupo)
 
   const { data, error } = await query
   if (error) return Response.json({ error: error.message }, { status: 500 })
@@ -91,7 +88,7 @@ export async function GET(request) {
     .update({ contacto_exportado: true })
     .in('id', ids)
 
-  const filename = `contactos-${curso_id}-${grupo || 'unico'}.vcf`
+  const filename = `contactos-${edicion_id}.vcf`
 
   return new Response(vcfContent, {
     headers: {

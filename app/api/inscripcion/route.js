@@ -99,6 +99,15 @@ export async function POST(request) {
   const cursoData = CURSOS.find(c => c.nombre === String(curso ?? '').trim())
   const kitPrecio = kit && cursoData?.kit?.disponible ? cursoData.kit.precio : null
 
+  // Derive edicion_id from the course + group selection
+  let edicionId = null
+  if (cursoData?.grupos && grupo) {
+    const grupoData = cursoData.grupos.find(g => g.nombre === grupo)
+    edicionId = grupoData?.edicionId ?? null
+  } else if (cursoData) {
+    edicionId = cursoData.edicionId ?? null
+  }
+
   const waNumber = `549${String(whatsapp ?? '').replace(/\D/g, '')}`
   const waText = encodeURIComponent(`Hola ${nombre}! Recibí tu pre-inscripción: ${curso}. Te contacto para coordinar el pago 🙌`)
   const waUrl = esc(`https://wa.me/${waNumber}?text=${waText}`)
@@ -233,6 +242,7 @@ export async function POST(request) {
         nombre,
         apellido: apellido || null,
         whatsapp,
+        edicion_id: edicionId,
         curso_id: cursoData?.id || null,
         grupo: grupo || null,
         kit: !!kit,

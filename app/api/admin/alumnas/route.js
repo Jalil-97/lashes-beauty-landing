@@ -2,27 +2,29 @@ import { CURSOS } from '@/lib/cursos'
 import supabaseAdmin from '@/lib/supabaseAdmin'
 import { verifyAdminSession } from '@/lib/adminAuth'
 
+function isEdicionInCursos(eid) {
+  return CURSOS.some(c =>
+    c.grupos ? c.grupos.some(g => g.edicionId === eid) : c.edicionId === eid
+  )
+}
+
 export async function GET(request) {
   const user = await verifyAdminSession(request)
   if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 })
 
   const { searchParams } = new URL(request.url)
-  const curso_id = searchParams.get('curso_id')
-  const grupo = searchParams.get('grupo')
+  const edicion_id = searchParams.get('edicion_id')
 
-  if (!curso_id) {
-    return Response.json({ error: 'curso_id requerido' }, { status: 400 })
+  if (!edicion_id) {
+    return Response.json({ error: 'edicion_id requerido' }, { status: 400 })
   }
 
-  let query = supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from('alumnas')
     .select('*, pagos(*)')
-    .eq('curso_id', curso_id)
+    .eq('edicion_id', edicion_id)
     .order('fecha_inscripcion', { ascending: true })
 
-  if (grupo) query = query.eq('grupo', grupo)
-
-  const { data, error } = await query
   if (error) return Response.json({ error: error.message }, { status: 500 })
 
   const alumnas = data.map(a => {
@@ -33,7 +35,17 @@ export async function GET(request) {
     return { ...a, total, totalPagado, saldoPendiente: total - totalPagado }
   })
 
-  return Response.json({ ok: true, alumnas })
+  // Edition metadata derived from frozen fields stored at inscription time
+  const edicion = data.length > 0 ? {
+    curso_id: data[0].curso_id,
+    curso_nombre: data[0].curso_nombre || edicion_id,
+    fecha_inicio: data[0].fecha_inicio || null,
+    grupo: data[0].grupo || null,
+    finalizado: data.every(a => a.curso_finalizado),
+    sinDefinicion: !isEdicionInCursos(edicion_id),
+  } : null
+
+  return Response.json({ ok: true, alumnas, edicion })
 }
 
 export async function POST(request) {
@@ -47,17 +59,28 @@ export async function POST(request) {
     return Response.json({ error: 'Body inválido' }, { status: 400 })
   }
 
-  const { nombre, apellido, whatsapp, kit, curso_id, grupo, notas } = body || {}
+  const { nombre, apellido, whatsapp, kit, edicion_id, notas } = body || {}
 
-  if (!nombre || !apellido || !whatsapp || !curso_id) {
+  if (!nombre || !apellido || !whatsapp || !edicion_id) {
     return Response.json(
-      { error: 'Faltan campos obligatorios: nombre, apellido, whatsapp, curso_id' },
+      { error: 'Faltan campos obligatorios: nombre, apellido, whatsapp, edicion_id' },
       { status: 400 }
     )
   }
 
-  // Freeze course data at inscription time so future price/name changes don't affect this record
-  const cursoData = CURSOS.find(c => c.id === curso_id)
+  // Derive course and group from edicion_id — never from client-sent ids
+  let cursoData = null
+  let grupoData = null
+  for (const c of CURSOS) {
+    if (c.grupos) {
+      const g = c.grupos.find(g => g.edicionId === edicion_id)
+      if (g) { cursoData = c; grupoData = g; break }
+    } else if (c.edicionId === edicion_id) {
+      cursoData = c; break
+    }
+  }
+
+  const grupo = grupoData?.nombre ?? null
   const precioKitDisponible = cursoData?.kit?.precio ?? null
 
   const { data, error } = await supabaseAdmin
@@ -67,8 +90,9 @@ export async function POST(request) {
       apellido,
       whatsapp,
       kit: !!kit,
-      curso_id,
-      grupo: grupo || null,
+      edicion_id,
+      curso_id: cursoData?.id ?? null,
+      grupo,
       notas: notas || null,
       origen: 'manual',
       fecha_inscripcion: new Date().toISOString().split('T')[0],

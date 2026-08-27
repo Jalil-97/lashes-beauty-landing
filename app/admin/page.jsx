@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { CURSOS } from '@/lib/cursos'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -21,16 +22,32 @@ function fmtDate(dateStr) {
   return `${d}/${m}/${y}`
 }
 
+const MESES_ES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+]
+
+// Parses "{algo}-YYYY-MM" or "{algo}-YYYY-MM-b" into { label: "Agosto 2026", key: "2026-08" }
+function parseMesAnio(edicionId) {
+  const match = String(edicionId ?? '').match(/-(\d{4})-(\d{2})(?:-[a-z])?$/)
+  if (!match) return null
+  const [, anio, mes] = match
+  const mesIdx = parseInt(mes, 10) - 1
+  if (mesIdx < 0 || mesIdx > 11) return null
+  return { label: `${MESES_ES[mesIdx]} ${anio}`, key: `${anio}-${mes}` }
+}
+
+// Message shown when a fetch fails with no response (network/timeout/server down),
+// as opposed to the API responding with its own error message
+function connError(action) {
+  return `No se pudo ${action}. Revisá tu conexión e intentá de nuevo.`
+}
+
 function buildWaLink(phone, nombre) {
   const digits = (phone || '').replace(/\D/g, '')
   const cleaned = digits.startsWith('15') ? '11' + digits.slice(2) : digits
   const text = nombre ? `?text=${encodeURIComponent(`Hola ${nombre}!`)}` : ''
   return `https://wa.me/549${cleaned}${text}`
-}
-
-function parseKey(key) {
-  const idx = key.indexOf('|')
-  return { curso_id: key.slice(0, idx), grupo: key.slice(idx + 1) || null }
 }
 
 // opts built from the cursos API response
@@ -40,7 +57,8 @@ function buildOptions(cursosList) {
     if (c.grupos) {
       for (const g of c.grupos) {
         opts.push({
-          key: `${c.id}|${g.nombre}`,
+          key: g.edicionId,
+          edicionId: g.edicionId,
           cursoNombre: c.nombre,
           cursoFechas: c.fechas || null,
           tieneCupos: c.tieneCupos,
@@ -48,13 +66,15 @@ function buildOptions(cursosList) {
           primeraFecha: g.primeraFecha || null,
           alumnaCount: g.alumnas,
           finalizado: g.finalizado,
+          sinDefinicion: g.sinDefinicion || false,
           curso_id: c.id,
           grupo: g.nombre,
         })
       }
     } else {
       opts.push({
-        key: `${c.id}|`,
+        key: c.edicionId,
+        edicionId: c.edicionId,
         cursoNombre: c.nombre,
         cursoFechas: c.fechas || null,
         tieneCupos: c.tieneCupos,
@@ -118,9 +138,15 @@ const btnDanger = {
   background: 'rgba(239,68,68,.08)', color: '#f87171', fontFamily: 'var(--fb)',
 }
 
+// Same style as the connection-error banner on the login screen
+const errorBoxStyle = {
+  background: 'rgba(220,40,40,.1)', border: '1px solid rgba(220,40,40,.3)',
+  borderRadius: 6, padding: '10px 14px', color: '#ff6b6b', fontSize: '.82rem',
+}
+
 // ─── ConfirmModal ─────────────────────────────────────────────────────────────
 
-function ConfirmModal({ title, message, warning, onConfirm, onCancel, loading, confirmLabel = 'Confirmar' }) {
+function ConfirmModal({ title, message, warning, error, onConfirm, onCancel, loading, confirmLabel = 'Confirmar' }) {
   return (
     <div
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.82)', zIndex: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
@@ -132,6 +158,11 @@ function ConfirmModal({ title, message, warning, onConfirm, onCancel, loading, c
         {warning && (
           <div style={{ background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.18)', borderRadius: 6, padding: '10px 14px', marginBottom: 24, fontSize: '.78rem', color: '#f87171' }}>
             {warning}
+          </div>
+        )}
+        {error && (
+          <div style={{ ...errorBoxStyle, marginBottom: 20 }}>
+            {error}
           </div>
         )}
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
@@ -182,7 +213,7 @@ function AddAlumnaModal({ onClose, onSave, loading, kitDisponible }) {
             <label style={lblStyle}>Notas (opcional)</label>
             <textarea className="fc" rows={2} value={form.notas} onChange={e => setForm(f => ({ ...f, notas: e.target.value }))} placeholder="Observaciones..." style={{ resize: 'vertical' }} />
           </div>
-          {error && <div style={{ color: '#f87171', fontSize: '.82rem', margin: '12px 0' }}>{error}</div>}
+          {error && <div style={{ ...errorBoxStyle, margin: '12px 0' }}>{error}</div>}
           <div style={{ display: 'flex', gap: 10, marginTop: 24, justifyContent: 'flex-end' }}>
             <button type="button" style={btnGhost} onClick={onClose}>Cancelar</button>
             <button type="submit" style={{ ...btnPink, opacity: loading ? .6 : 1 }} disabled={loading}>{loading ? 'Guardando...' : 'Guardar'}</button>
@@ -234,7 +265,7 @@ function EditAlumnaModal({ alumna, onClose, onSave, loading }) {
             <label style={lblStyle}>Notas</label>
             <textarea className="fc" rows={2} value={form.notas} onChange={e => setForm(f => ({ ...f, notas: e.target.value }))} style={{ resize: 'vertical' }} />
           </div>
-          {error && <div style={{ color: '#f87171', fontSize: '.82rem', margin: '12px 0' }}>{error}</div>}
+          {error && <div style={{ ...errorBoxStyle, margin: '12px 0' }}>{error}</div>}
           <div style={{ display: 'flex', gap: 10, marginTop: 24, justifyContent: 'flex-end' }}>
             <button type="button" style={btnGhost} onClick={onClose}>Cancelar</button>
             <button type="submit" style={{ ...btnPink, opacity: loading ? .6 : 1 }} disabled={loading}>{loading ? 'Guardando...' : 'Guardar'}</button>
@@ -255,6 +286,7 @@ function AddPagoModal({ alumna, onClose, onSave, onEditPago, onDeletePago, loadi
   const [error, setError] = useState('')
   const [overpaymentPending, setOverpaymentPending] = useState(null)
   const [confirmDeletePago, setConfirmDeletePago] = useState(null)
+  const [deletePagoError, setDeletePagoError] = useState('')
 
   const pagos = [...(alumna.pagos || [])].sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
 
@@ -291,6 +323,13 @@ function AddPagoModal({ alumna, onClose, onSave, onEditPago, onDeletePago, loadi
   function startEdit(p) {
     setEditingPago(p)
     setEditForm({ monto: p.monto, medio: p.medio, fecha: p.fecha, nota: p.nota || '' })
+  }
+
+  async function handleConfirmDeletePago() {
+    setDeletePagoError('')
+    const err = await onDeletePago(confirmDeletePago.id)
+    if (err) setDeletePagoError(err)
+    else setConfirmDeletePago(null)
   }
 
   return (
@@ -398,7 +437,7 @@ function AddPagoModal({ alumna, onClose, onSave, onEditPago, onDeletePago, loadi
                 <input className="fc" value={form.nota} onChange={e => setForm(f => ({ ...f, nota: e.target.value }))} placeholder="Seña, pago parcial..." />
               </div>
             </div>
-            {error && <div style={{ color: '#f87171', fontSize: '.82rem', marginBottom: 12 }}>{error}</div>}
+            {error && <div style={{ ...errorBoxStyle, marginBottom: 12 }}>{error}</div>}
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
               <button type="button" style={btnGhost} onClick={onClose}>Cerrar</button>
               <button type="submit" style={{ ...btnPink, opacity: loading ? .6 : 1 }} disabled={loading}>{loading ? 'Guardando...' : 'Guardar pago'}</button>
@@ -423,8 +462,9 @@ function AddPagoModal({ alumna, onClose, onSave, onEditPago, onDeletePago, loadi
           title="Eliminar pago"
           message={`¿Eliminás el pago de ${fmt(confirmDeletePago.monto)} del ${fmtDate(confirmDeletePago.fecha)}?`}
           warning="Esta acción no se puede deshacer."
-          onConfirm={() => { onDeletePago(confirmDeletePago.id); setConfirmDeletePago(null) }}
-          onCancel={() => setConfirmDeletePago(null)}
+          error={deletePagoError}
+          onConfirm={handleConfirmDeletePago}
+          onCancel={() => { setConfirmDeletePago(null); setDeletePagoError('') }}
           loading={loading}
           confirmLabel="Eliminar pago"
         />
@@ -461,13 +501,15 @@ const WA_ICON = (
 
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 
-export default function AdminDashboard() {
+function AdminDashboard() {
   const [options, setOptions] = useState([])
   const [selectedCursoId, setSelectedCursoId] = useState('')
   // '__single__' = explicit selection for non-grupo courses; '' = nothing selected
   const [selectedGrupoName, setSelectedGrupoName] = useState('')
   const [alumnas, setAlumnas] = useState([])
   const [loadingAlumnas, setLoadingAlumnas] = useState(false)
+  const [alumnasLoadError, setAlumnasLoadError] = useState(false)
+  const [cursosLoadError, setCursosLoadError] = useState(false)
   const [search, setSearch] = useState('')
   const [sortCol, setSortCol] = useState('fecha')
   const [sortAsc, setSortAsc] = useState(true)
@@ -476,18 +518,39 @@ export default function AdminDashboard() {
   const [editingAlumna, setEditingAlumna] = useState(null)
   const [pagoAlumnaId, setPagoAlumnaId] = useState(null)
   const [confirmDeleteAlumna, setConfirmDeleteAlumna] = useState(null)
+  const [deleteAlumnaError, setDeleteAlumnaError] = useState('')
   const [confirmFinalizar, setConfirmFinalizar] = useState(false)
   const [finalizarError, setFinalizarError] = useState('')
+  const [finalizarModalError, setFinalizarModalError] = useState('')
+  const [confirmReabrir, setConfirmReabrir] = useState(false)
+  const [reabrirError, setReabrirError] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
   const [showFinalizados, setShowFinalizados] = useState(false)
   const [finalizados, setFinalizados] = useState([])
+  const [finalizadosMesFilter, setFinalizadosMesFilter] = useState('')
   const [loadingFinalizados, setLoadingFinalizados] = useState(false)
+  const [finalizadosLoadError, setFinalizadosLoadError] = useState(false)
   const [exportContactosMsg, setExportContactosMsg] = useState(null)
+  const [exportContactosNetError, setExportContactosNetError] = useState(false)
   const [exportingContactos, setExportingContactos] = useState(false)
   const [exportingBackup, setExportingBackup] = useState(false)
+  const [exportBackupMsg, setExportBackupMsg] = useState(null)
   const [visitedCounts, setVisitedCounts] = useState({})
   const [courseDropdownOpen, setCourseDropdownOpen] = useState(false)
   const courseDropdownRef = useRef(null)
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  // directEdicionId: when set, bypasses selectors and shows this edition directly
+  const [directEdicionId, setDirectEdicionId] = useState(null)
+  const [lastEdicionMeta, setLastEdicionMeta] = useState(null)
+
+  // Global student search (across all editions, active and finalizadas)
+  const [globalSearch, setGlobalSearch] = useState('')
+  const [globalResults, setGlobalResults] = useState([])
+  const [globalSearchLoading, setGlobalSearchLoading] = useState(false)
+  const [globalSearchError, setGlobalSearchError] = useState(false)
+  const [globalSearchOpen, setGlobalSearchOpen] = useState(false)
+  const globalSearchRef = useRef(null)
 
   // ── Derived course structure ──────────────────────────────────────────────
 
@@ -498,32 +561,50 @@ export default function AdminDashboard() {
     [courses, selectedCursoId]
   )
 
-  // selectedKey: non-grupo courses require '__single__' sentinel; grupo courses require a grupo name
+  // selectedKey is the edicionId of the chosen edition
   const selectedKey = useMemo(() => {
+    // Direct navigation bypasses the selector chain entirely
+    if (directEdicionId) return directEdicionId
     if (!selectedCursoId || !selectedCourse) return ''
     if (!selectedCourse.hasGrupos) {
-      return selectedGrupoName === '__single__' ? `${selectedCursoId}|` : ''
+      return selectedGrupoName === '__single__' ? (selectedCourse.options[0]?.key ?? '') : ''
     }
-    return selectedGrupoName ? `${selectedCursoId}|${selectedGrupoName}` : ''
-  }, [selectedCursoId, selectedGrupoName, selectedCourse])
+    // selectedGrupoName stores edicionId for grupo courses
+    return selectedCourse.options.some(o => o.edicionId === selectedGrupoName) ? selectedGrupoName : ''
+  }, [directEdicionId, selectedCursoId, selectedGrupoName, selectedCourse])
 
-  const selectedOption = useMemo(
-    () => (selectedKey && selectedCourse ? selectedCourse.options.find(o => o.key === selectedKey) || null : null),
-    [selectedKey, selectedCourse]
-  )
+  const selectedOption = useMemo(() => {
+    // In direct mode, build a synthetic option from the fetched metadata
+    if (directEdicionId && lastEdicionMeta) {
+      return {
+        key: directEdicionId,
+        edicionId: directEdicionId,
+        cursoNombre: lastEdicionMeta.curso_nombre,
+        cursoFechas: lastEdicionMeta.fecha_inicio,
+        tieneCupos: false,
+        grupoNombre: lastEdicionMeta.grupo,
+        primeraFecha: null,
+        alumnaCount: alumnas.length,
+        finalizado: lastEdicionMeta.finalizado,
+        sinDefinicion: lastEdicionMeta.sinDefinicion,
+        curso_id: lastEdicionMeta.curso_id,
+        grupo: lastEdicionMeta.grupo,
+      }
+    }
+    return selectedKey && selectedCourse ? selectedCourse.options.find(o => o.key === selectedKey) || null : null
+  }, [directEdicionId, lastEdicionMeta, selectedKey, selectedCourse, alumnas.length])
 
   const pagoAlumna = useMemo(
     () => (pagoAlumnaId ? alumnas.find(a => a.id === pagoAlumnaId) || null : null),
     [pagoAlumnaId, alumnas]
   )
 
-  // Per-course count of alumnas added since last visit (sourced from localStorage vs API alumnaCount)
+  // Per-course count of alumnas added since last visit (sourced from Supabase vs API alumnaCount)
   const courseBadges = useMemo(() => {
     const badges = {}
     for (const opt of options) {
-      const key = `lba_visited_${opt.curso_id}_${opt.grupo || ''}`
-      if (!(key in visitedCounts)) continue
-      const diff = Math.max(0, opt.alumnaCount - visitedCounts[key])
+      if (!(opt.edicionId in visitedCounts)) continue
+      const diff = Math.max(0, opt.alumnaCount - visitedCounts[opt.edicionId])
       if (diff > 0) badges[opt.curso_id] = (badges[opt.curso_id] || 0) + diff
     }
     return badges
@@ -541,40 +622,40 @@ export default function AdminDashboard() {
     try {
       const res = await fetch('/api/admin/cursos')
       const d = await res.json()
-      if (d.cursos) setOptions(buildOptions(d.cursos))
-    } catch {}
+      if (d.cursos) { setOptions(buildOptions(d.cursos)); setCursosLoadError(false) }
+    } catch { setCursosLoadError(true) }
   }, [])
 
   useEffect(() => { fetchCursos() }, [fetchCursos])
 
-  // Load all previously-visited edition counts from localStorage on mount
+  // Activate direct mode when ?edicion_id is present in the URL (e.g. from "Ver detalle" link)
   useEffect(() => {
-    try {
-      const result = {}
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i)
-        if (key?.startsWith('lba_visited_')) {
-          const raw = localStorage.getItem(key)
-          if (raw) {
-            const parsed = JSON.parse(raw)
-            result[key] = parsed.count ?? 0
-          }
-        }
-      }
-      setVisitedCounts(result)
-    } catch {}
+    const eid = searchParams.get('edicion_id')
+    if (eid) setDirectEdicionId(eid)
+  }, [searchParams])
+
+  // Load all previously-visited edition counts from Supabase on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/admin/vistas')
+        const d = await res.json()
+        const result = {}
+        for (const v of d.vistas || []) result[v.edicion_id] = v.alumnas_count
+        setVisitedCounts(result)
+      } catch {}
+    })()
   }, [])
 
-  // When entering an edition's detail, persist current alumnaCount as "seen" in localStorage
+  // When entering an edition's detail, persist current alumnaCount as "seen" in Supabase
   useEffect(() => {
     if (!selectedKey || !selectedOption) return
-    const { curso_id, grupo } = parseKey(selectedKey)
-    const key = `lba_visited_${curso_id}_${grupo || ''}`
     const count = selectedOption.alumnaCount
-    try {
-      localStorage.setItem(key, JSON.stringify({ count, ts: new Date().toISOString() }))
-    } catch {}
-    setVisitedCounts(prev => prev[key] === count ? prev : { ...prev, [key]: count })
+    setVisitedCounts(prev => prev[selectedKey] === count ? prev : { ...prev, [selectedKey]: count })
+    fetch('/api/admin/vistas', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ edicion_id: selectedKey, alumnas_count: count }),
+    }).catch(() => {})
   }, [selectedKey, selectedOption?.alumnaCount])
 
   useEffect(() => {
@@ -588,20 +669,54 @@ export default function AdminDashboard() {
     return () => document.removeEventListener('mousedown', handleOutsideClick)
   }, [courseDropdownOpen])
 
+  useEffect(() => {
+    if (!globalSearchOpen) return
+    function handleOutsideClick(e) {
+      if (globalSearchRef.current && !globalSearchRef.current.contains(e.target)) {
+        setGlobalSearchOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleOutsideClick)
+    return () => document.removeEventListener('mousedown', handleOutsideClick)
+  }, [globalSearchOpen])
+
+  // Debounced global student search
+  useEffect(() => {
+    const q = globalSearch.trim()
+    if (q.length < 2) { setGlobalResults([]); setGlobalSearchLoading(false); setGlobalSearchError(false); return }
+    setGlobalSearchLoading(true)
+    const timer = setTimeout(async () => {
+      try {
+        const params = new URLSearchParams({ q })
+        const res = await fetch(`/api/admin/alumnas/buscar?${params}`)
+        const d = await res.json()
+        setGlobalResults(d.resultados || [])
+        setGlobalSearchError(false)
+      } catch {
+        setGlobalResults([])
+        setGlobalSearchError(true)
+      } finally {
+        setGlobalSearchLoading(false)
+      }
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [globalSearch])
+
   const fetchAlumnas = useCallback(async (key) => {
-    if (!key) { setAlumnas([]); return [] }
-    const { curso_id, grupo } = parseKey(key)
+    if (!key) { setAlumnas([]); setAlumnasLoadError(false); return [] }
     setLoadingAlumnas(true)
     try {
-      const params = new URLSearchParams({ curso_id })
-      if (grupo) params.set('grupo', grupo)
+      const params = new URLSearchParams({ edicion_id: key })
       const res = await fetch(`/api/admin/alumnas?${params}`)
       const d = await res.json()
       const list = d.alumnas || []
       setAlumnas(list)
+      if (d.edicion) setLastEdicionMeta(d.edicion)
+      setAlumnasLoadError(false)
       return list
     } catch {
       setAlumnas([])
+      setAlumnasLoadError(true)
       return []
     } finally {
       setLoadingAlumnas(false)
@@ -616,9 +731,28 @@ export default function AdminDashboard() {
       const res = await fetch('/api/admin/finalizados')
       const d = await res.json()
       setFinalizados(d.finalizados || [])
-    } catch {}
-    finally { setLoadingFinalizados(false) }
+      setFinalizadosLoadError(false)
+    } catch {
+      setFinalizadosLoadError(true)
+    } finally { setLoadingFinalizados(false) }
   }, [])
+
+  // Distinct mes/año options across finalizados, newest first
+  const finalizadosMesOptions = useMemo(() => {
+    const map = new Map()
+    for (const f of finalizados) {
+      const mesAnio = parseMesAnio(f.edicion_id)
+      if (mesAnio && !map.has(mesAnio.key)) map.set(mesAnio.key, mesAnio.label)
+    }
+    return Array.from(map.entries())
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .map(([key, label]) => ({ key, label }))
+  }, [finalizados])
+
+  const finalizadosFiltered = useMemo(() => {
+    if (!finalizadosMesFilter) return finalizados
+    return finalizados.filter(f => parseMesAnio(f.edicion_id)?.key === finalizadosMesFilter)
+  }, [finalizados, finalizadosMesFilter])
 
   // ── Computed metrics ──────────────────────────────────────────────────────
 
@@ -681,16 +815,15 @@ export default function AdminDashboard() {
   async function handleAddAlumna(formData) {
     setActionLoading(true)
     try {
-      const { curso_id, grupo } = parseKey(selectedKey)
       const res = await fetch('/api/admin/alumnas', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, curso_id, grupo }),
+        body: JSON.stringify({ ...formData, edicion_id: selectedKey }),
       })
       const d = await res.json()
       if (!d.ok) return d.error || 'Error al guardar'
       setShowAddModal(false)
       await refreshAll()
-    } catch { return 'Error de conexión' }
+    } catch { return connError('guardar') }
     finally { setActionLoading(false) }
   }
 
@@ -705,21 +838,23 @@ export default function AdminDashboard() {
       if (!d.ok) return d.error || 'Error al guardar'
       setEditingAlumna(null)
       await fetchAlumnas(selectedKey)
-    } catch { return 'Error de conexión' }
+    } catch { return connError('guardar') }
     finally { setActionLoading(false) }
   }
 
   async function handleDeleteAlumna() {
     if (!confirmDeleteAlumna) return
     setActionLoading(true)
+    setDeleteAlumnaError('')
     try {
       const res = await fetch(`/api/admin/alumnas/${confirmDeleteAlumna.id}`, { method: 'DELETE' })
       const d = await res.json()
-      if (!d.ok) return
+      if (!d.ok) { setDeleteAlumnaError(d.error || 'Error al eliminar'); return }
       setConfirmDeleteAlumna(null)
       await refreshAll()
-    } catch {}
-    finally { setActionLoading(false) }
+    } catch {
+      setDeleteAlumnaError(connError('eliminar'))
+    } finally { setActionLoading(false) }
   }
 
   async function handleAddPago(formData) {
@@ -732,7 +867,7 @@ export default function AdminDashboard() {
       const d = await res.json()
       if (!d.ok) return d.error || 'Error al guardar'
       await fetchAlumnas(selectedKey)
-    } catch { return 'Error de conexión' }
+    } catch { return connError('guardar') }
     finally { setActionLoading(false) }
   }
 
@@ -746,7 +881,7 @@ export default function AdminDashboard() {
       const d = await res.json()
       if (!d.ok) return d.error || 'Error al guardar'
       await fetchAlumnas(selectedKey)
-    } catch { return 'Error de conexión' }
+    } catch { return connError('guardar') }
     finally { setActionLoading(false) }
   }
 
@@ -761,26 +896,54 @@ export default function AdminDashboard() {
     setConfirmFinalizar(true)
   }
 
+  function handleClickFinalizarConSaldo() {
+    setFinalizarError('')
+    setConfirmFinalizar(true)
+  }
+
   async function handleMarkFinalizado() {
     if (!selectedKey) return
-    const { curso_id, grupo } = parseKey(selectedKey)
-    const grupoParam = grupo ? encodeURIComponent(grupo) : '_'
     setActionLoading(true)
+    setFinalizarModalError('')
     try {
-      const res = await fetch(`/api/admin/cursos/${curso_id}/${grupoParam}/finalizar`, { method: 'PATCH' })
+      const res = await fetch(`/api/admin/ediciones/${encodeURIComponent(selectedKey)}/finalizar`, { method: 'PATCH' })
       const d = await res.json()
       if (d.ok) {
         setConfirmFinalizar(false)
+        setFinalizarError('')
         setSelectedCursoId('')
         setSelectedGrupoName('')
         await refreshAll()
+      } else {
+        setFinalizarModalError(d.error || 'Error al finalizar')
       }
-    } catch {}
-    finally { setActionLoading(false) }
+    } catch {
+      setFinalizarModalError(connError('finalizar'))
+    } finally { setActionLoading(false) }
+  }
+
+  async function handleReabrir() {
+    if (!selectedKey) return
+    setActionLoading(true)
+    setReabrirError('')
+    try {
+      const res = await fetch(`/api/admin/ediciones/${encodeURIComponent(selectedKey)}/reabrir`, { method: 'PATCH' })
+      const d = await res.json()
+      if (d.ok) {
+        setConfirmReabrir(false)
+        await refreshAll()
+      } else {
+        setReabrirError(d.error || 'Error al reabrir')
+      }
+    } catch {
+      setReabrirError(connError('reabrir'))
+    } finally { setActionLoading(false) }
   }
 
   async function handleLogout() {
-    await fetch('/api/admin/logout', { method: 'POST' })
+    try {
+      await fetch('/api/admin/logout', { method: 'POST' })
+    } catch {}
     window.location.href = '/admin/login'
   }
 
@@ -788,10 +951,9 @@ export default function AdminDashboard() {
     if (!selectedKey) return
     setExportingContactos(true)
     setExportContactosMsg(null)
+    setExportContactosNetError(false)
     try {
-      const { curso_id, grupo } = parseKey(selectedKey)
-      const params = new URLSearchParams({ curso_id })
-      if (grupo) params.set('grupo', grupo)
+      const params = new URLSearchParams({ edicion_id: selectedKey })
       const res = await fetch(`/api/admin/exportar/contactos?${params}`)
       if (!res.ok) {
         const d = await res.json()
@@ -808,7 +970,8 @@ export default function AdminDashboard() {
       a.click()
       URL.revokeObjectURL(url)
     } catch {
-      setExportContactosMsg('Error de conexión')
+      setExportContactosMsg(connError('exportar'))
+      setExportContactosNetError(true)
     } finally {
       setExportingContactos(false)
     }
@@ -816,9 +979,10 @@ export default function AdminDashboard() {
 
   async function handleExportBackup() {
     setExportingBackup(true)
+    setExportBackupMsg(null)
     try {
       const res = await fetch('/api/admin/exportar/backup')
-      if (!res.ok) return
+      if (!res.ok) { setExportBackupMsg('No se pudo exportar. Intentá de nuevo.'); return }
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -828,8 +992,9 @@ export default function AdminDashboard() {
       a.download = match ? match[1] : 'backup-alumnas.csv'
       a.click()
       URL.revokeObjectURL(url)
-    } catch {}
-    finally { setExportingBackup(false) }
+    } catch {
+      setExportBackupMsg(connError('exportar'))
+    } finally { setExportingBackup(false) }
   }
 
   function handleSort(col) {
@@ -840,13 +1005,20 @@ export default function AdminDashboard() {
   async function handleDeletePago(pagoId) {
     setActionLoading(true)
     try {
-      await fetch(`/api/admin/pagos/${pagoId}`, { method: 'DELETE' })
+      const res = await fetch(`/api/admin/pagos/${pagoId}`, { method: 'DELETE' })
+      const d = await res.json()
+      if (!d.ok) return d.error || 'Error al eliminar'
       await fetchAlumnas(selectedKey)
-    } catch {}
+    } catch { return connError('eliminar') }
     finally { setActionLoading(false) }
   }
 
   function handleSelectCurso(cursoId) {
+    if (directEdicionId) {
+      setDirectEdicionId(null)
+      setLastEdicionMeta(null)
+      router.replace('/admin')
+    }
     setSelectedCursoId(cursoId)
     setSelectedGrupoName('')
     setSearch('')
@@ -869,19 +1041,39 @@ export default function AdminDashboard() {
 
   function handleOpenFinalizados() {
     setShowFinalizados(true)
+    setFinalizadosMesFilter('')
     fetchFinalizados()
   }
 
   function handleVerDetalle(f) {
-    setSelectedCursoId(f.curso_id)
-    // Non-grupo courses use '__single__' sentinel; grupo courses use the grupo name
-    setSelectedGrupoName(f.grupo !== null ? f.grupo : '__single__')
+    setLastEdicionMeta(null)
+    setDirectEdicionId(f.edicion_id)
     setShowFinalizados(false)
     setSearch('')
     setFilter('all')
     setSortCol('fecha')
     setSortAsc(true)
     setFinalizarError('')
+    router.push(`/admin?edicion_id=${encodeURIComponent(f.edicion_id)}`)
+  }
+
+  function handleSelectGlobalResult(r) {
+    handleVerDetalle(r)
+    setGlobalSearch('')
+    setGlobalResults([])
+    setGlobalSearchOpen(false)
+  }
+
+  function handleExitDirect() {
+    setDirectEdicionId(null)
+    setLastEdicionMeta(null)
+    setAlumnas([])
+    setSearch('')
+    setFilter('all')
+    setSortCol('fecha')
+    setSortAsc(true)
+    setFinalizarError('')
+    router.replace('/admin')
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -928,6 +1120,16 @@ export default function AdminDashboard() {
         .adm-course-option:hover { background: rgba(255,255,255,.06); }
         .adm-course-option.adm-selected { color: var(--pk); }
         .adm-course-badge { background: #e03131; color: #fff; border-radius: 999px; padding: 2px 8px; font-size: .7rem; font-weight: 700; min-width: 20px; text-align: center; line-height: 1.4; flex-shrink: 0; }
+        .adm-gsearch-wrap { position: relative; max-width: 380px; margin-bottom: 24px; }
+        .adm-gsearch-input { width: 100%; box-sizing: border-box; background: var(--dg); border: 1px solid var(--mg); border-radius: 5px; padding: 10px 14px; color: var(--wh); font-family: var(--fb); font-size: .88rem; outline: none; }
+        .adm-gsearch-input:focus { border-color: var(--pk); }
+        .adm-gsearch-dropdown { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--dg); border: 1px solid var(--mg); border-radius: 7px; z-index: 200; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,.5); max-height: 320px; overflow-y: auto; }
+        .adm-gsearch-option { display: flex; flex-direction: column; gap: 2px; width: 100%; padding: 10px 14px; background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,.05); color: var(--wh); font-family: var(--fb); cursor: pointer; text-align: left; }
+        .adm-gsearch-option:last-child { border-bottom: none; }
+        .adm-gsearch-option:hover { background: rgba(255,255,255,.06); }
+        .adm-gsearch-name { font-size: .87rem; font-weight: 500; }
+        .adm-gsearch-meta { font-size: .74rem; color: var(--mt); }
+        .adm-gsearch-empty { padding: 12px 14px; font-size: .82rem; color: var(--mt); }
         @media (max-width: 900px) { .adm-metrics { grid-template-columns: repeat(2,1fr); } }
         @media (max-width: 768px) {
           .adm-topbar { padding: 0 16px; }
@@ -945,6 +1147,7 @@ export default function AdminDashboard() {
         @media (max-width: 520px) {
           .adm-metrics { grid-template-columns: 1fr 1fr; }
           .adm-search { max-width: 100%; }
+          .adm-gsearch-wrap { max-width: 100%; }
         }
       `}</style>
 
@@ -960,7 +1163,7 @@ export default function AdminDashboard() {
           >
             {showFinalizados ? '← Volver' : 'Finalizados'}
           </button>
-          <span className="adm-btn-backup">
+          <span className="adm-btn-backup" style={{ position: 'relative' }}>
             <button
               onClick={handleExportBackup}
               disabled={exportingBackup}
@@ -968,6 +1171,11 @@ export default function AdminDashboard() {
             >
               {exportingBackup ? 'Generando...' : 'Exportar backup'}
             </button>
+            {exportBackupMsg && (
+              <div style={{ ...errorBoxStyle, position: 'absolute', top: 'calc(100% + 6px)', right: 0, width: 230, zIndex: 300 }}>
+                {exportBackupMsg}
+              </div>
+            )}
           </span>
           <button onClick={handleLogout} style={{ ...btnGhostSm, fontSize: '.78rem' }}>Salir</button>
         </div>
@@ -975,31 +1183,89 @@ export default function AdminDashboard() {
 
       <div className="adm-main">
 
+        {/* ── Global student search — always accessible, across all editions ── */}
+        <div className="adm-gsearch-wrap" ref={globalSearchRef}>
+          <input
+            type="text"
+            className="adm-gsearch-input"
+            placeholder="Buscar alumna por nombre, en todos los cursos..."
+            value={globalSearch}
+            onChange={e => { setGlobalSearch(e.target.value); setGlobalSearchOpen(true) }}
+            onFocus={() => globalSearch.trim().length >= 2 && setGlobalSearchOpen(true)}
+          />
+          {globalSearchOpen && globalSearch.trim().length >= 2 && (
+            <div className="adm-gsearch-dropdown">
+              {globalSearchLoading && (
+                <div className="adm-gsearch-empty">Buscando...</div>
+              )}
+              {!globalSearchLoading && globalSearchError && (
+                <div className="adm-gsearch-empty" style={{ color: '#ff6b6b' }}>{connError('buscar')}</div>
+              )}
+              {!globalSearchLoading && !globalSearchError && globalResults.length === 0 && (
+                <div className="adm-gsearch-empty">Sin resultados.</div>
+              )}
+              {!globalSearchLoading && globalResults.map(r => (
+                <button key={r.id} className="adm-gsearch-option" onClick={() => handleSelectGlobalResult(r)}>
+                  <span className="adm-gsearch-name">{r.nombre} {r.apellido}</span>
+                  <span className="adm-gsearch-meta">
+                    {r.curso_nombre}{r.grupo ? ` · ${r.grupo}` : ''}{r.curso_finalizado ? ' · Finalizado' : ''}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* ── Finalizados view ───────────────────────────────────────────── */}
         {showFinalizados && (
           <div>
             <div style={{ fontFamily: 'var(--fd)', fontSize: '2rem', marginBottom: 6 }}>Cursos finalizados</div>
-            <p style={{ color: 'var(--mt)', fontSize: '.85rem', marginBottom: 24 }}>Ediciones marcadas como finalizadas. Solo lectura.</p>
+            <p style={{ color: 'var(--mt)', fontSize: '.85rem', marginBottom: 20 }}>Ediciones marcadas como finalizadas. Solo lectura.</p>
+
+            {!loadingFinalizados && finalizados.length > 0 && (
+              <div className="adm-sel-wrap" style={{ marginBottom: 20, maxWidth: 240 }}>
+                <label style={lblStyle}>Mes</label>
+                <select
+                  className="adm-select"
+                  value={finalizadosMesFilter}
+                  onChange={e => setFinalizadosMesFilter(e.target.value)}
+                >
+                  <option value="">Todos</option>
+                  {finalizadosMesOptions.map(o => (
+                    <option key={o.key} value={o.key}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {loadingFinalizados && (
               <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--mt)' }}>Cargando...</div>
             )}
             {!loadingFinalizados && finalizados.length === 0 && (
+              finalizadosLoadError ? (
+                <div style={errorBoxStyle}>{connError('cargar')}</div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--mt)', fontSize: '.88rem' }}>
+                  Ningún curso marcado como finalizado todavía.
+                </div>
+              )
+            )}
+            {!loadingFinalizados && finalizados.length > 0 && finalizadosFiltered.length === 0 && (
               <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--mt)', fontSize: '.88rem' }}>
-                Ningún curso marcado como finalizado todavía.
+                Ninguna edición coincide con el mes seleccionado.
               </div>
             )}
-            {!loadingFinalizados && finalizados.length > 0 && (
+            {!loadingFinalizados && finalizadosFiltered.length > 0 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {finalizados.map(f => (
+                {finalizadosFiltered.map(f => (
                   <div key={f.key} className="adm-fin-row">
                     <div>
                       <div style={{ fontWeight: 600, fontSize: '.9rem' }}>
                         {f.curso_nombre}
                         {f.grupo && <span style={{ color: 'var(--pk)', marginLeft: 8, fontWeight: 400, fontSize: '.82rem' }}>{f.grupo}</span>}
                       </div>
-                      {f.fecha_inicio && (
-                        <div style={{ fontSize: '.75rem', color: 'var(--mt)', marginTop: 3 }}>Inicio: {f.fecha_inicio}</div>
+                      {parseMesAnio(f.edicion_id) && (
+                        <div style={{ fontSize: '.75rem', color: 'var(--mt)', marginTop: 3 }}>{parseMesAnio(f.edicion_id).label}</div>
                       )}
                       <div style={{ fontSize: '.75rem', color: 'var(--mt)', marginTop: 2 }}>
                         {f.alumnas} alumna{f.alumnas !== 1 ? 's' : ''}
@@ -1016,8 +1282,42 @@ export default function AdminDashboard() {
         {/* ── Main view ─────────────────────────────────────────────────── */}
         {!showFinalizados && (
           <>
-            {/* Selectors — always both visible when a course is selected */}
-            <div className="adm-selects">
+            {/* Direct mode: back button + edition header (bypasses selectors) */}
+            {directEdicionId && (
+              <div style={{ marginBottom: 24 }}>
+                <button onClick={handleExitDirect} style={btnGhostSm}>← Volver al panel</button>
+                {lastEdicionMeta && (
+                  <div style={{ marginTop: 16 }}>
+                    <div style={{ fontFamily: 'var(--fd)', fontSize: '1.5rem', marginBottom: 2 }}>
+                      {lastEdicionMeta.curso_nombre}
+                    </div>
+                    {lastEdicionMeta.grupo && (
+                      <span style={{ color: 'var(--pk)', fontSize: '.88rem' }}>{lastEdicionMeta.grupo}</span>
+                    )}
+                    {lastEdicionMeta.fecha_inicio && (
+                      <div style={{ color: 'var(--mt)', fontSize: '.78rem', marginTop: 4 }}>
+                        Inicio: {lastEdicionMeta.fecha_inicio}
+                      </div>
+                    )}
+                    {lastEdicionMeta.sinDefinicion && (
+                      <div style={{ color: 'var(--mt)', fontSize: '.75rem', marginTop: 4, fontStyle: 'italic' }}>
+                        Esta edición ya no está activa en el catálogo
+                      </div>
+                    )}
+                  </div>
+                )}
+                {!lastEdicionMeta && loadingAlumnas && (
+                  <div style={{ color: 'var(--mt)', fontSize: '.85rem', marginTop: 12 }}>Cargando edición...</div>
+                )}
+              </div>
+            )}
+
+            {cursosLoadError && (
+              <div style={{ ...errorBoxStyle, marginBottom: 20 }}>{connError('cargar')}</div>
+            )}
+
+            {/* Selectors — shown only in normal browsing mode */}
+            {!directEdicionId && <div className="adm-selects">
               {/* Level 1: all courses, always */}
               <div className="adm-sel-wrap">
                 <label style={lblStyle}>Curso</label>
@@ -1088,8 +1388,9 @@ export default function AdminDashboard() {
                     >
                       <option value="">— Elegí una edición —</option>
                       {activeGroups.map(o => (
-                        <option key={o.key} value={o.grupoNombre}>
+                        <option key={o.key} value={o.edicionId}>
                           {o.grupoNombre}{o.primeraFecha ? ` — ${o.primeraFecha}` : ''}
+                          {o.sinDefinicion ? ' (anterior)' : ''}
                         </option>
                       ))}
                     </select>
@@ -1103,7 +1404,7 @@ export default function AdminDashboard() {
                   )}
                 </div>
               )}
-            </div>
+            </div>}
 
             {/* Course detail */}
             {showContent && selectedOption && (
@@ -1148,7 +1449,7 @@ export default function AdminDashboard() {
 
                 {/* Action buttons */}
                 <div style={{ display: 'flex', gap: 10, marginBottom: exportContactosMsg ? 10 : 20, flexWrap: 'wrap', alignItems: 'center' }}>
-                  {!selectedOption.finalizado && (
+                  {!selectedOption.finalizado && !selectedOption.sinDefinicion && (
                     <button style={btnPink} onClick={() => setShowAddModal(true)}>
                       + Agregar alumna
                     </button>
@@ -1163,10 +1464,28 @@ export default function AdminDashboard() {
                       ✓ Marcar como finalizado
                     </button>
                   )}
+                  {!selectedOption.finalizado && conSaldo > 0 && finalizarError && (
+                    <button
+                      style={{ ...btnDanger, opacity: actionLoading ? .5 : 1 }}
+                      onClick={handleClickFinalizarConSaldo}
+                      disabled={actionLoading}
+                    >
+                      Finalizar de todas formas
+                    </button>
+                  )}
                   {selectedOption.finalizado && (
-                    <span style={{ background: 'rgba(197,168,128,.07)', color: 'var(--gd)', border: '1px solid rgba(197,168,128,.2)', borderRadius: 6, padding: '8px 14px', fontSize: '.8rem', fontWeight: 600 }}>
-                      ✓ Curso finalizado
-                    </span>
+                    <>
+                      <span style={{ background: 'rgba(197,168,128,.07)', color: 'var(--gd)', border: '1px solid rgba(197,168,128,.2)', borderRadius: 6, padding: '8px 14px', fontSize: '.8rem', fontWeight: 600 }}>
+                        ✓ Curso finalizado
+                      </span>
+                      <button
+                        style={{ ...btnGhost, opacity: actionLoading ? .5 : 1 }}
+                        onClick={() => setConfirmReabrir(true)}
+                        disabled={actionLoading}
+                      >
+                        ↺ Reabrir
+                      </button>
+                    </>
                   )}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                     <button
@@ -1181,7 +1500,10 @@ export default function AdminDashboard() {
                 </div>
 
                 {exportContactosMsg && (
-                  <div style={{ background: 'rgba(197,168,128,.06)', border: '1px solid rgba(197,168,128,.2)', borderRadius: 7, padding: '10px 14px', marginBottom: 20, fontSize: '.83rem', color: '#C5A880' }}>
+                  <div style={exportContactosNetError
+                    ? { ...errorBoxStyle, marginBottom: 20 }
+                    : { background: 'rgba(197,168,128,.06)', border: '1px solid rgba(197,168,128,.2)', borderRadius: 7, padding: '10px 14px', marginBottom: 20, fontSize: '.83rem', color: '#C5A880' }
+                  }>
                     {exportContactosMsg}
                   </div>
                 )}
@@ -1238,9 +1560,13 @@ export default function AdminDashboard() {
                 )}
 
                 {!loadingAlumnas && filtered.length === 0 && (
-                  <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--mt)', fontSize: '.88rem' }}>
-                    {alumnas.length === 0 ? 'No hay alumnas en este curso todavía.' : 'Ninguna alumna coincide con el filtro.'}
-                  </div>
+                  alumnasLoadError ? (
+                    <div style={errorBoxStyle}>{connError('cargar')}</div>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--mt)', fontSize: '.88rem' }}>
+                      {alumnas.length === 0 ? 'No hay alumnas en este curso todavía.' : 'Ninguna alumna coincide con el filtro.'}
+                    </div>
+                  )
                 )}
 
                 {/* Desktop table */}
@@ -1369,7 +1695,7 @@ export default function AdminDashboard() {
           onClose={() => setShowAddModal(false)}
           onSave={handleAddAlumna}
           loading={actionLoading}
-          kitDisponible={CURSOS.find(c => c.id === selectedCursoId)?.kit?.disponible ?? true}
+          kitDisponible={CURSOS.find(c => c.id === selectedOption?.curso_id)?.kit?.disponible ?? true}
         />
       )}
 
@@ -1393,24 +1719,48 @@ export default function AdminDashboard() {
           title="Eliminar alumna"
           message={`¿Segura que querés eliminar a ${confirmDeleteAlumna.nombre} ${confirmDeleteAlumna.apellido}? Se borrarán también todos sus pagos registrados.`}
           warning="Esta acción no se puede deshacer."
+          error={deleteAlumnaError}
           confirmLabel="Eliminar"
           onConfirm={handleDeleteAlumna}
-          onCancel={() => setConfirmDeleteAlumna(null)}
+          onCancel={() => { setConfirmDeleteAlumna(null); setDeleteAlumnaError('') }}
           loading={actionLoading}
         />
       )}
 
       {confirmFinalizar && (
         <ConfirmModal
-          title="Marcar como finalizado"
-          message="Una vez finalizado, el curso pasa al historial. No se podrán agregar alumnas nuevas ni marcarlo como activo nuevamente desde este panel."
-          warning="Esta acción no se puede deshacer."
-          confirmLabel="Finalizar curso"
+          title={conSaldo > 0 ? 'Finalizar con saldo pendiente' : 'Marcar como finalizado'}
+          message={conSaldo > 0
+            ? `Hay ${conSaldo} alumna${conSaldo === 1 ? '' : 's'} con saldo pendiente por un total de ${fmt(totalPorCobrar)}. ¿Confirmás finalizar igual?`
+            : 'El curso pasa al historial y no se podrán agregar alumnas nuevas mientras esté finalizado. Podés reabrirlo en cualquier momento desde el detalle de la edición.'
+          }
+          error={finalizarModalError}
+          confirmLabel={conSaldo > 0 ? 'Finalizar de todas formas' : 'Finalizar curso'}
           onConfirm={handleMarkFinalizado}
-          onCancel={() => setConfirmFinalizar(false)}
+          onCancel={() => { setConfirmFinalizar(false); setFinalizarModalError('') }}
+          loading={actionLoading}
+        />
+      )}
+
+      {confirmReabrir && (
+        <ConfirmModal
+          title="Reabrir edición"
+          message="La edición vuelve a aparecer como activa en el selector. Se podrán agregar alumnas y registrar pagos nuevamente."
+          error={reabrirError}
+          confirmLabel="Reabrir"
+          onConfirm={handleReabrir}
+          onCancel={() => { setConfirmReabrir(false); setReabrirError('') }}
           loading={actionLoading}
         />
       )}
     </div>
+  )
+}
+
+export default function AdminPage() {
+  return (
+    <Suspense>
+      <AdminDashboard />
+    </Suspense>
   )
 }
