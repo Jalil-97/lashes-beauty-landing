@@ -1368,7 +1368,7 @@ function AdminDashboard() {
                         value={selectedGrupoName}
                         onChange={e => handleSelectGrupo(e.target.value)}
                       >
-                        <option value="">— Seleccioná la fecha —</option>
+                        <option value="">— Elegí una edición —</option>
                         {selectedCourse.options.filter(o => !o.finalizado).map(o => (
                           <option key={o.key} value={o.edicionId}>
                             {o.grupoNombre || o.cursoFechas || selectedCourse.nombre}
