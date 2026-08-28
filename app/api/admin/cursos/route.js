@@ -54,7 +54,9 @@ export async function GET(request) {
           id: null,
           edicionId: eid,
           nombre: meta.grupo || meta.fecha_inicio || eid,
-          primeraFecha: meta.fecha_inicio || null,
+          // Only show a separate date when nombre is a group name — otherwise
+          // nombre already IS the date, and repeating it would show "X — X"
+          primeraFecha: meta.grupo ? (meta.fecha_inicio || null) : null,
           alumnas: counts[eid] || 0,
           finalizado: false,
           sinDefinicion: true,
@@ -111,7 +113,9 @@ export async function GET(request) {
       id: null,
       edicionId: eid,
       nombre: meta.grupo || meta.fecha_inicio || eid,
-      primeraFecha: meta.fecha_inicio || null,
+      // Only show a separate date when nombre is a group name — otherwise
+      // nombre already IS the date, and repeating it would show "X — X"
+      primeraFecha: meta.grupo ? (meta.fecha_inicio || null) : null,
       alumnas: counts[eid] || 0,
       finalizado: false,
       sinDefinicion: true,

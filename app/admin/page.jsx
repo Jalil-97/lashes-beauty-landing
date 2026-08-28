@@ -504,7 +504,7 @@ const WA_ICON = (
 function AdminDashboard() {
   const [options, setOptions] = useState([])
   const [selectedCursoId, setSelectedCursoId] = useState('')
-  // '__single__' = explicit selection for non-grupo courses; '' = nothing selected
+  // Stores the edicionId of the chosen edition; '' = nothing selected
   const [selectedGrupoName, setSelectedGrupoName] = useState('')
   const [alumnas, setAlumnas] = useState([])
   const [loadingAlumnas, setLoadingAlumnas] = useState(false)
@@ -561,15 +561,12 @@ function AdminDashboard() {
     [courses, selectedCursoId]
   )
 
-  // selectedKey is the edicionId of the chosen edition
+  // selectedKey is the edicionId of the chosen edition.
+  // selectedGrupoName always stores a real edicionId (grouped and non-grouped courses alike)
   const selectedKey = useMemo(() => {
     // Direct navigation bypasses the selector chain entirely
     if (directEdicionId) return directEdicionId
     if (!selectedCursoId || !selectedCourse) return ''
-    if (!selectedCourse.hasGrupos) {
-      return selectedGrupoName === '__single__' ? (selectedCourse.options[0]?.key ?? '') : ''
-    }
-    // selectedGrupoName stores edicionId for grupo courses
     return selectedCourse.options.some(o => o.edicionId === selectedGrupoName) ? selectedGrupoName : ''
   }, [directEdicionId, selectedCursoId, selectedGrupoName, selectedCourse])
 
@@ -1359,9 +1356,9 @@ function AdminDashboard() {
                 <div className="adm-sel-wrap">
                   <label style={lblStyle}>Edición</label>
 
-                  {/* Non-grupo course: one option with the course date, unless already finalized */}
+                  {/* Non-grupo course: iterate all real editions (vigente + any old one still active) */}
                   {!selectedCourse.hasGrupos && (
-                    selectedCourse.options[0]?.finalizado ? (
+                    selectedCourse.options.filter(o => !o.finalizado).length === 0 ? (
                       <div className="adm-no-editions">
                         No hay ediciones activas de este curso
                       </div>
@@ -1372,9 +1369,12 @@ function AdminDashboard() {
                         onChange={e => handleSelectGrupo(e.target.value)}
                       >
                         <option value="">— Seleccioná la fecha —</option>
-                        <option value="__single__">
-                          {selectedCourse.fechas || selectedCourse.nombre}
-                        </option>
+                        {selectedCourse.options.filter(o => !o.finalizado).map(o => (
+                          <option key={o.key} value={o.edicionId}>
+                            {o.grupoNombre || o.cursoFechas || selectedCourse.nombre}
+                            {o.sinDefinicion ? ' (anterior)' : ''}
+                          </option>
+                        ))}
                       </select>
                     )
                   )}
