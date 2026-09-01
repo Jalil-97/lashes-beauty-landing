@@ -1,6 +1,7 @@
 import { Resend } from 'resend'
 import { CURSOS } from '@/lib/cursos'
 import supabaseAdmin from '@/lib/supabaseAdmin'
+import { buildWaLink, isValidWhatsapp } from '@/lib/whatsapp'
 
 const FROM_EMAIL = 'Lashes Beauty Academy <inscripciones@lashesbeautyok.com>'
 
@@ -96,6 +97,10 @@ export async function POST(request) {
     )
   }
 
+  if (!isValidWhatsapp(whatsapp)) {
+    return Response.json({ ok: false, error: 'Número de WhatsApp inválido' }, { status: 400 })
+  }
+
   const cursoData = CURSOS.find(c => c.nombre === String(curso ?? '').trim())
   const kitPrecio = kit && cursoData?.kit?.disponible ? cursoData.kit.precio : null
 
@@ -108,9 +113,9 @@ export async function POST(request) {
     edicionId = cursoData.edicionId ?? null
   }
 
-  const waNumber = `549${String(whatsapp ?? '').replace(/\D/g, '')}`
-  const waText = encodeURIComponent(`Hola ${nombre}! Recibí tu pre-inscripción: ${curso}. Te contacto para coordinar el pago 🙌`)
-  const waUrl = esc(`https://wa.me/${waNumber}?text=${waText}`)
+  const waUrl = esc(
+    buildWaLink(whatsapp, `Hola ${nombre}! Recibí tu pre-inscripción: ${curso}. Te contacto para coordinar el pago 🙌`) || ''
+  )
 
   const html = `<!DOCTYPE html>
 <html>

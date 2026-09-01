@@ -13,11 +13,19 @@ const ALT_TEXTS = {
   'korean-lift-online': 'Curso Korean Lift 100% Online en Lashes Beauty Academy',
 }
 
+// Ajuste manual de encuadre por curso — el ojo en curso-lash-trends.webp
+// está alto en la foto original, el recorte por defecto (centrado) lo dejaba
+// pegado al borde superior de la tarjeta.
+const IMAGE_POSITIONS = {
+  'lash-trends': 'center 35%',
+}
+
 const COURSES = CURSOS.map(c => ({
   id: c.id,
   cat: c.filtros,
   badge: { label: c.modalidad.toUpperCase(), style: {} },
   image: c.imagen,
+  imagePosition: IMAGE_POSITIONS[c.id] || 'center',
   imgPlaceholder: c.nombre,
   altText: ALT_TEXTS[c.id] || `Curso ${c.nombre} en Lashes Beauty Academy`,
   tags: [c.modalidad, c.nivel],
@@ -111,7 +119,7 @@ export default function Courses({ onPreselect }) {
                 <img
                   src={course.image}
                   alt={course.altText}
-                  style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', objectFit: 'cover', objectPosition: course.imagePosition, display: 'block' }}
                 />
               </div>
               <div className="cc-body">

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { CURSOS } from '@/lib/cursos'
+import { buildWaLink } from '@/lib/whatsapp'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -41,13 +42,6 @@ function parseMesAnio(edicionId) {
 // as opposed to the API responding with its own error message
 function connError(action) {
   return `No se pudo ${action}. Revisá tu conexión e intentá de nuevo.`
-}
-
-function buildWaLink(phone, nombre) {
-  const digits = (phone || '').replace(/\D/g, '')
-  const cleaned = digits.startsWith('15') ? '11' + digits.slice(2) : digits
-  const text = nombre ? `?text=${encodeURIComponent(`Hola ${nombre}!`)}` : ''
-  return `https://wa.me/549${cleaned}${text}`
 }
 
 // opts built from the cursos API response
@@ -179,13 +173,17 @@ function ConfirmModal({ title, message, warning, error, onConfirm, onCancel, loa
 // ─── AddAlumnaModal ───────────────────────────────────────────────────────────
 
 function AddAlumnaModal({ onClose, onSave, loading, kitDisponible }) {
-  const [form, setForm] = useState({ nombre: '', apellido: '', whatsapp: '', kit: false, notas: '' })
+  const [form, setForm] = useState({ nombre: '', apellido: '', whatsapp: '', kit: false, notas: '', descuento: '0' })
   const [error, setError] = useState('')
 
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
-    const err = await onSave(form)
+    if (Number(form.descuento) < 0) {
+      setError('El descuento no puede ser negativo')
+      return
+    }
+    const err = await onSave({ ...form, descuento: Number(form.descuento) || 0 })
     if (err) setError(err)
   }
 
@@ -209,6 +207,10 @@ function AddAlumnaModal({ onClose, onSave, loading, kitDisponible }) {
             <input type="checkbox" id="add-kit" checked={form.kit} onChange={e => setForm(f => ({ ...f, kit: e.target.checked }))} style={{ accentColor: 'var(--pk)', width: 16, height: 16 }} disabled={!kitDisponible} />
             <label htmlFor="add-kit" style={{ color: 'var(--wh)', fontSize: '.87rem', cursor: kitDisponible ? 'pointer' : 'not-allowed' }}>Incluye kit de materiales</label>
           </div>
+          <div style={{ marginBottom: 16 }}>
+            <label style={lblStyle}>Descuento (opcional)</label>
+            <input className="fc" type="number" min="0" value={form.descuento} onChange={e => setForm(f => ({ ...f, descuento: e.target.value }))} placeholder="0" />
+          </div>
           <div style={{ marginBottom: 4 }}>
             <label style={lblStyle}>Notas (opcional)</label>
             <textarea className="fc" rows={2} value={form.notas} onChange={e => setForm(f => ({ ...f, notas: e.target.value }))} placeholder="Observaciones..." style={{ resize: 'vertical' }} />
@@ -231,13 +233,18 @@ function EditAlumnaModal({ alumna, onClose, onSave, loading }) {
   const [form, setForm] = useState({
     nombre: alumna.nombre, apellido: alumna.apellido,
     whatsapp: alumna.whatsapp, kit: alumna.kit, notas: alumna.notas || '',
+    descuento: String(alumna.descuento || 0),
   })
   const [error, setError] = useState('')
 
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
-    const err = await onSave(alumna.id, form)
+    if (Number(form.descuento) < 0) {
+      setError('El descuento no puede ser negativo')
+      return
+    }
+    const err = await onSave(alumna.id, { ...form, descuento: Number(form.descuento) || 0 })
     if (err) setError(err)
   }
 
@@ -260,6 +267,10 @@ function EditAlumnaModal({ alumna, onClose, onSave, loading }) {
           <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10, opacity: kitDisponible ? 1 : 0.4 }}>
             <input type="checkbox" id="edit-kit" checked={form.kit} onChange={e => setForm(f => ({ ...f, kit: e.target.checked }))} style={{ accentColor: 'var(--pk)', width: 16, height: 16 }} disabled={!kitDisponible} />
             <label htmlFor="edit-kit" style={{ color: 'var(--wh)', fontSize: '.87rem', cursor: kitDisponible ? 'pointer' : 'not-allowed' }}>Incluye kit de materiales</label>
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <label style={lblStyle}>Descuento</label>
+            <input className="fc" type="number" min="0" value={form.descuento} onChange={e => setForm(f => ({ ...f, descuento: e.target.value }))} />
           </div>
           <div style={{ marginBottom: 4 }}>
             <label style={lblStyle}>Notas</label>
@@ -1607,6 +1618,7 @@ function AdminDashboard() {
                             <td>
                               <span style={{ color: 'var(--pk)', fontWeight: 500 }}>{fmt(a.totalPagado)}</span>
                               <span style={{ color: 'var(--mt)', fontSize: '.78rem' }}> / {fmt(a.total)}</span>
+                              {a.descuento > 0 && <div style={{ fontSize: '.72rem', color: 'var(--mt)', marginTop: 2 }}>Descuento: {fmt(a.descuento)}</div>}
                             </td>
                             <td>
                               <span style={{ color: a.saldoPendiente > 0 ? '#f87171' : a.saldoPendiente < 0 ? '#C5A880' : 'var(--mt)', fontWeight: a.saldoPendiente !== 0 ? 600 : 400 }}>
@@ -1615,7 +1627,7 @@ function AdminDashboard() {
                             </td>
                             <td>
                               {a.whatsapp
-                                ? <a href={buildWaLink(a.whatsapp, a.nombre)} target="_blank" rel="noopener noreferrer" style={{ color: '#25D366', fontWeight: 500, fontSize: '.84rem', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: 4 }}>{WA_ICON}{a.whatsapp}</a>
+                                ? <a href={buildWaLink(a.whatsapp, `Hola ${a.nombre}!`)} target="_blank" rel="noopener noreferrer" style={{ color: '#25D366', fontWeight: 500, fontSize: '.84rem', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: 4 }}>{WA_ICON}{a.whatsapp}</a>
                                 : <span style={{ color: 'var(--mt)', fontSize: '.8rem' }}>Sin teléfono</span>
                               }
                             </td>
@@ -1651,13 +1663,14 @@ function AdminDashboard() {
                           <MobileField label="Fecha">{fmtDate(a.fecha_inscripcion)}</MobileField>
                           <MobileField label="WhatsApp">
                             {a.whatsapp
-                              ? <a href={buildWaLink(a.whatsapp, a.nombre)} target="_blank" rel="noopener noreferrer" style={{ color: '#25D366', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 4 }}>{WA_ICON}{a.whatsapp}</a>
+                              ? <a href={buildWaLink(a.whatsapp, `Hola ${a.nombre}!`)} target="_blank" rel="noopener noreferrer" style={{ color: '#25D366', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 4 }}>{WA_ICON}{a.whatsapp}</a>
                               : <span style={{ color: 'var(--mt)' }}>Sin teléfono</span>
                             }
                           </MobileField>
                           <MobileField label="Pagado / Total">
                             <span style={{ color: 'var(--pk)', fontWeight: 500 }}>{fmt(a.totalPagado)}</span>
                             <span style={{ color: 'var(--mt)', fontSize: '.78rem' }}> / {fmt(a.total)}</span>
+                            {a.descuento > 0 && <div style={{ fontSize: '.72rem', color: 'var(--mt)', marginTop: 2 }}>Descuento: {fmt(a.descuento)}</div>}
                           </MobileField>
                           <MobileField label="Saldo">
                             <span style={{ color: a.saldoPendiente > 0 ? '#f87171' : a.saldoPendiente < 0 ? '#C5A880' : 'var(--mt)', fontWeight: a.saldoPendiente !== 0 ? 600 : 400 }}>

@@ -31,7 +31,7 @@ export async function GET(request) {
     const totalPagado = (a.pagos || []).reduce((sum, p) => sum + Number(p.monto), 0)
     // Use frozen price fields stored at inscription time, not live cursos.js lookup
     const precioKit = a.kit ? (a.precio_kit || 0) : 0
-    const total = (a.precio || 0) + precioKit
+    const total = Math.max(0, (a.precio || 0) + precioKit - (a.descuento || 0))
     return { ...a, total, totalPagado, saldoPendiente: total - totalPagado }
   })
 
@@ -59,13 +59,17 @@ export async function POST(request) {
     return Response.json({ error: 'Body inválido' }, { status: 400 })
   }
 
-  const { nombre, apellido, whatsapp, kit, edicion_id, notas } = body || {}
+  const { nombre, apellido, whatsapp, kit, edicion_id, notas, descuento } = body || {}
 
   if (!nombre || !apellido || !whatsapp || !edicion_id) {
     return Response.json(
       { error: 'Faltan campos obligatorios: nombre, apellido, whatsapp, edicion_id' },
       { status: 400 }
     )
+  }
+
+  if (descuento !== undefined && Number(descuento) < 0) {
+    return Response.json({ error: 'El descuento no puede ser negativo' }, { status: 400 })
   }
 
   // Derive course and group from edicion_id — never from client-sent ids
@@ -102,6 +106,7 @@ export async function POST(request) {
       precio: cursoData?.precio ?? null,
       precio_kit_disponible: precioKitDisponible,
       precio_kit: !!kit ? (precioKitDisponible ?? 0) : 0,
+      descuento: Number(descuento) || 0,
     })
     .select()
     .single()

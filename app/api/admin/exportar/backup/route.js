@@ -23,7 +23,7 @@ export async function GET(request) {
 
   const header = [
     'nombre', 'apellido', 'whatsapp', 'curso_nombre', 'grupo', 'fecha_inicio',
-    'fecha_inscripcion', 'kit', 'notas', 'precio', 'precio_kit', 'curso_finalizado',
+    'fecha_inscripcion', 'kit', 'notas', 'precio', 'precio_kit', 'descuento', 'curso_finalizado',
     'pago_monto', 'pago_fecha', 'pago_medio', 'pago_nota',
   ]
 
@@ -32,7 +32,7 @@ export async function GET(request) {
     const base = [
       a.nombre, a.apellido, a.whatsapp, a.curso_nombre, a.grupo, a.fecha_inicio,
       a.fecha_inscripcion, a.kit ? 'SI' : 'NO', a.notas,
-      a.precio, a.precio_kit, a.curso_finalizado ? 'SI' : 'NO',
+      a.precio, a.precio_kit, a.descuento || 0, a.curso_finalizado ? 'SI' : 'NO',
     ]
     const pagos = a.pagos || []
     if (pagos.length === 0) {

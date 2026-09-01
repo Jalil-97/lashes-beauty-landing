@@ -1,10 +1,6 @@
 import supabaseAdmin from '@/lib/supabaseAdmin'
 import { verifyAdminSession } from '@/lib/adminAuth'
-
-function normalizePhone(phone) {
-  const digits = (phone || '').replace(/\D/g, '')
-  return digits.startsWith('15') ? '11' + digits.slice(2) : digits
-}
+import { toDialableE164 } from '@/lib/whatsapp'
 
 function escapeVcard(str) {
   return (str || '')
@@ -57,10 +53,9 @@ export async function GET(request) {
   }
 
   const cards = withPhone.map(a => {
-    const cleanedPhone = normalizePhone(a.whatsapp)
     const fn = escapeVcard(`${a.nombre} ${a.apellido} (${a.curso_nombre || ''})`)
     const n = `${escapeVcard(a.apellido)};${escapeVcard(a.nombre)};;;`
-    const tel = `+549${cleanedPhone}`
+    const tel = toDialableE164(a.whatsapp) || `+549${(a.whatsapp || '').replace(/\D/g, '')}`
     const noteRaw = a.grupo
       ? `${a.grupo} · Inicio ${a.fecha_inicio || ''}`
       : (a.fecha_inicio ? `Inicio ${a.fecha_inicio}` : '')

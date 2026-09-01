@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import { buildWaLink, isValidWhatsapp } from '@/lib/whatsapp'
 
 const FROM_EMAIL = 'Lashes Beauty Academy <inscripciones@lashesbeautyok.com>'
 
@@ -80,9 +81,13 @@ export async function POST(request) {
     )
   }
 
-  const waNumber = `549${String(whatsapp ?? '').replace(/\D/g, '')}`
-  const waText = encodeURIComponent(`Hola ${nombre}! Vi tu interés en ${curso}. Te escribo para contarte las próximas fechas disponibles 🙌`)
-  const waUrl = esc(`https://wa.me/${waNumber}?text=${waText}`)
+  if (!isValidWhatsapp(whatsapp)) {
+    return Response.json({ ok: false, error: 'Número de WhatsApp inválido' }, { status: 400 })
+  }
+
+  const waUrl = esc(
+    buildWaLink(whatsapp, `Hola ${nombre}! Vi tu interés en ${curso}. Te escribo para contarte las próximas fechas disponibles 🙌`) || ''
+  )
 
   const html = `
   <div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;color:#0F0F10;">

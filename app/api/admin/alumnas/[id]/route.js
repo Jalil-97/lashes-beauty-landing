@@ -30,13 +30,18 @@ export async function PATCH(request, ctx) {
     return Response.json({ error: 'Body inválido' }, { status: 400 })
   }
 
-  const { nombre, apellido, whatsapp, kit, notas } = body || {}
+  const { nombre, apellido, whatsapp, kit, notas, descuento } = body || {}
+
+  if (descuento !== undefined && Number(descuento) < 0) {
+    return Response.json({ error: 'El descuento no puede ser negativo' }, { status: 400 })
+  }
 
   const updates = {}
   if (nombre !== undefined) updates.nombre = nombre
   if (apellido !== undefined) updates.apellido = apellido
   if (whatsapp !== undefined) updates.whatsapp = whatsapp
   if (notas !== undefined) updates.notas = notas
+  if (descuento !== undefined) updates.descuento = Number(descuento)
 
   if (kit !== undefined) {
     updates.kit = !!kit

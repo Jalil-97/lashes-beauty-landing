@@ -1,7 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import PhoneInput from 'react-phone-number-input'
+import 'react-phone-number-input/style.css'
 import { CURSOS } from '@/lib/cursos'
+import { isValidWhatsapp } from '@/lib/whatsapp'
 import { Landmark, CreditCard, Banknote } from 'lucide-react'
 
 const PAY_LABELS = {
@@ -71,12 +74,6 @@ export default function ContactForm({ preselectedCourse }) {
 
   const isEmailValid = (v) => /^\S+@\S+\.\S+$/.test(v.trim())
 
-  const isWhatsappValid = (v) => {
-    if (!/^[+\d\s-]+$/.test(v.trim())) return false
-    const digits = v.replace(/\D/g, '').length
-    return digits >= 8 && digits <= 15
-  }
-
   function validateStep1() {
     const e = {}
     if (!nombre.trim()) e.nombre = 'Ingresá tu nombre'
@@ -84,7 +81,7 @@ export default function ContactForm({ preselectedCourse }) {
     if (!email.trim()) e.email = 'Ingresá tu email'
     else if (!isEmailValid(email)) e.email = 'Ingresá un email válido'
     if (!whatsapp.trim()) e.whatsapp = 'Ingresá tu WhatsApp'
-    else if (!isWhatsappValid(whatsapp)) e.whatsapp = 'Ingresá un número de WhatsApp válido (ej: 1130001234 o +5491130001234)'
+    else if (!isValidWhatsapp(whatsapp)) e.whatsapp = 'Ingresá un número de WhatsApp válido'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -252,6 +249,37 @@ export default function ContactForm({ preselectedCourse }) {
 
   return (
     <section className="section" id="s-form">
+      <style>{`
+        .fc-phone {
+          display: flex;
+          align-items: center;
+          width: 100%;
+          background: var(--bk);
+          border: 1px solid var(--mg);
+          border-radius: 5px;
+          padding: 0 14px;
+          transition: var(--tr);
+        }
+        .fc-phone:focus-within { border-color: var(--pk); }
+        .fc-phone .PhoneInputCountry {
+          margin-right: 10px;
+          border-right: 1px solid var(--mg);
+          padding-right: 10px;
+        }
+        .fc-phone .PhoneInputCountrySelect { background: var(--bk); color: var(--wh); }
+        .fc-phone .PhoneInputCountryIcon { box-shadow: none; }
+        .fc-phone-input {
+          flex: 1;
+          background: transparent;
+          border: none;
+          outline: none;
+          padding: 11px 0;
+          color: var(--wh);
+          font-family: var(--fb);
+          font-size: .88rem;
+        }
+        .fc-phone-input::placeholder { color: var(--lg); }
+      `}</style>
       {sectionHeader}
 
       <div className="form-wrap">
@@ -313,8 +341,16 @@ export default function ContactForm({ preselectedCourse }) {
                 </div>
                 <div className="fg">
                   <label>WhatsApp</label>
-                  <input className="fc" type="tel" placeholder="Ej: 1123456789 (con código de área, sin el 15)"
-                    value={whatsapp} onChange={e => { setWhatsapp(e.target.value); clearError('whatsapp') }} />
+                  <PhoneInput
+                    international
+                    countryCallingCodeEditable={false}
+                    defaultCountry="AR"
+                    value={whatsapp || undefined}
+                    onChange={(v) => { setWhatsapp(v || ''); clearError('whatsapp') }}
+                    placeholder="Ej: 11 2345 6789"
+                    className="fc-phone"
+                    numberInputProps={{ className: 'fc-phone-input' }}
+                  />
                   {fieldError('whatsapp')}
                 </div>
                 <div className="fg">
