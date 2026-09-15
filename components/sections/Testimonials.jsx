@@ -29,6 +29,9 @@ const TESTIMONIOS = [
   },
   {
     foto: '/images/testimonio-5.webp',
+    // Foto de cuerpo entero (retrato muy angosto) — las caras quedan en el
+    // tercio superior, el recorte centrado por defecto las cortaría.
+    fotoPos: 'center 25%',
     texto: 'Mica, quedé super conforme con el curso, me encantó desde inicio a fin, tu paciencia, dedicación y compromiso para enseñarnos. Super recomendable, ahora a poner en práctica todo lo aprendido.',
     nombre: 'Carla Lazarte',
     curso: 'De Cero a Lash Artist',
@@ -52,11 +55,17 @@ const N = TESTIMONIOS.length
 function Card({ t }) {
   return (
     <div className="t-real-card">
-      <img src={t.foto} alt={`Testimonio de ${t.nombre} sobre el curso ${t.curso}`} />
+      <img
+        src={t.foto}
+        alt={`Testimonio de ${t.nombre} sobre el curso ${t.curso}`}
+        style={{ objectPosition: t.fotoPos || 'center' }}
+      />
       <div className="t-real-body">
+        <div className="t-real-row1">
+          <span className="t-real-nombre">{t.nombre}</span>
+          <span className="t-real-curso">{t.curso}</span>
+        </div>
         <p className="t-real-texto">"{t.texto}"</p>
-        <p className="t-real-nombre">{t.nombre}</p>
-        <p className="t-real-curso">{t.curso}</p>
       </div>
     </div>
   )
@@ -88,30 +97,33 @@ export default function Testimonials() {
           background: #1A1A1C;
           border: 0.5px solid #2C2C2F;
           border-radius: 8px;
-          overflow: hidden;
           display: flex;
-          flex-direction: column;
+          flex-direction: row;
+          align-items: flex-start;
+          gap: 14px;
+          padding: 16px;
           width: 100%;
         }
         .t-real-card img {
-          width: 100%;
-          height: 220px;
+          width: 92px;
+          height: 92px;
+          flex-shrink: 0;
+          border-radius: 8px;
+          border: 1px solid var(--mg);
           object-fit: cover;
-          object-position: center;
           display: block;
         }
         .t-real-body {
-          padding: 20px 20px 24px;
           display: flex;
           flex-direction: column;
-          gap: 12px;
-          flex: 1;
+          gap: 6px;
+          min-width: 0;
         }
-        .t-real-texto {
-          font-style: italic;
-          color: #A3A3A8;
-          line-height: 1.6;
-          margin: 0;
+        .t-real-row1 {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: baseline;
+          gap: 4px 10px;
         }
         .t-real-nombre {
           font-weight: 700;
@@ -123,6 +135,13 @@ export default function Testimonials() {
           color: #F7A8B8;
           margin: 0;
           letter-spacing: 0.04em;
+        }
+        .t-real-texto {
+          font-style: italic;
+          color: #A3A3A8;
+          line-height: 1.5;
+          font-size: 0.85rem;
+          margin: 0;
         }
         .t-carousel-desktop {
           display: grid;

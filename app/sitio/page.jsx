@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import PromoBanner from '@/components/sections/PromoBanner'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import Hero from '@/components/sections/Hero'
@@ -18,6 +19,7 @@ export default function Home() {
 
   return (
     <>
+      <PromoBanner onPreselect={setPreselectedCourse} />
       <Header />
       <main>
         <FadeIn><Hero /></FadeIn>
