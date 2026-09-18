@@ -5,6 +5,7 @@ import PhoneInput from 'react-phone-number-input'
 import 'react-phone-number-input/style.css'
 import { CURSOS } from '@/lib/cursos'
 import { isValidWhatsapp, buildWaLink } from '@/lib/whatsapp'
+import { validarCupon, calcularDescuento, CUPON_MENSAJES } from '@/lib/cupones'
 import { Landmark, CreditCard, Banknote } from 'lucide-react'
 
 const PAY_LABELS = {
@@ -64,6 +65,8 @@ export default function ContactForm({ preselectedCourse }) {
   const [terms, setTerms] = useState(false)
   const [grupo, setGrupo] = useState('')
   const [kitSeleccionado, setKitSeleccionado] = useState(false)
+  const [cuponAbierto, setCuponAbierto] = useState(false)
+  const [cuponInput, setCuponInput] = useState('')
 
   // Lista de espera
   const [listaEsperaOk, setListaEsperaOk] = useState(false)
@@ -159,6 +162,7 @@ export default function ContactForm({ preselectedCourse }) {
           modalidad: getModalidad(curso),
           metodoPago: PAY_LABELS[payMethod] || payMethod,
           kit: kitSeleccionado,
+          cupon: cuponInput.trim() || undefined,
         }),
       })
       if (!res.ok) {
@@ -212,10 +216,17 @@ export default function ContactForm({ preselectedCourse }) {
   const cursoSoldOut = !!(curso && getCurso(curso)?.soldOut)
   const isOnline = getCurso(curso)?.modalidad === 'Online'
 
+  // Validación en vivo del cupón — misma función que revalida el servidor,
+  // para que nunca puedan desincronizarse los criterios de qué cupón aplica.
+  const cuponValidacion = cuponInput.trim() ? validarCupon(cuponInput, getCurso(curso)?.id) : null
+  const cuponAplicado = cuponValidacion?.ok ? cuponValidacion.cupon : null
+  const descuento = cuponAplicado ? calcularDescuento(cuponAplicado, getCurso(curso)?.precio) : 0
+
   // Única fuente del total — usado tanto en el resumen del paso 3 como
   // en el bloque de datos de transferencia post-envío, nunca recalculado.
+  // El descuento se calcula sobre el precio del curso, nunca sobre el kit.
   const total = getCurso(curso)
-    ? getCurso(curso).precio + (kitSeleccionado && getCurso(curso)?.kit?.precio ? getCurso(curso).kit.precio : 0)
+    ? Math.max(0, getCurso(curso).precio + (kitSeleccionado && getCurso(curso)?.kit?.precio ? getCurso(curso).kit.precio : 0) - descuento)
     : 0
 
   const transferenciaDisponible = isOnline && payMethod === 'bank'
@@ -633,6 +644,39 @@ export default function ContactForm({ preselectedCourse }) {
                   </div>
                   {fieldError('payMethod')}
                 </div>
+                <div className="fg">
+                  {!cuponAbierto && (
+                    <button
+                      type="button"
+                      onClick={() => setCuponAbierto(true)}
+                      style={{ background: 'none', border: 'none', padding: 0, color: '#F7A8B8', fontSize: '.82rem', cursor: 'pointer', textDecoration: 'underline' }}
+                    >
+                      ¿Tenés un cupón?
+                    </button>
+                  )}
+                  {cuponAbierto && (
+                    <>
+                      <label>Código de cupón</label>
+                      <input
+                        className="fc"
+                        type="text"
+                        placeholder="Ej: TREND10"
+                        value={cuponInput}
+                        onChange={e => setCuponInput(e.target.value)}
+                      />
+                      {cuponInput.trim() && !cuponAplicado && (
+                        <p className="field-error" role="alert" style={{ color: '#e5484d', fontSize: '0.8rem', marginTop: '6px' }}>
+                          {CUPON_MENSAJES[cuponValidacion.motivo]}
+                        </p>
+                      )}
+                      {cuponAplicado && (
+                        <p style={{ color: '#7CD992', fontSize: '0.8rem', marginTop: '6px' }}>
+                          Cupón {cuponAplicado.codigo} aplicado — ${descuento.toLocaleString('es-AR')} de descuento
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
                 <div className="summary-box">
                   <div className="summary-row">
                     <span>Curso</span>
@@ -646,9 +690,26 @@ export default function ContactForm({ preselectedCourse }) {
                   )}
                   {grupo && <div className="summary-row"><span>Grupo</span><span>{grupo}</span></div>}
                   <div className="summary-row"><span>Modalidad</span><span>{getModalidad(curso) || '—'}</span></div>
+                  {cuponAplicado && (
+                    <div className="summary-row">
+                      <span>Descuento ({cuponAplicado.codigo})</span>
+                      <span>-${descuento.toLocaleString('es-AR')}</span>
+                    </div>
+                  )}
                   <div className="summary-row">
                     <span>Total</span>
-                    <span>{getCurso(curso) ? '$' + total.toLocaleString('es-AR') : '—'}</span>
+                    <span>
+                      {getCurso(curso) ? (
+                        <>
+                          {cuponAplicado && (
+                            <span style={{ textDecoration: 'line-through', color: '#A3A3A8', fontSize: '.85em', marginRight: '8px' }}>
+                              ${(total + descuento).toLocaleString('es-AR')}
+                            </span>
+                          )}
+                          ${total.toLocaleString('es-AR')}
+                        </>
+                      ) : '—'}
+                    </span>
                   </div>
                 </div>
                 <div className="cb">

@@ -2,6 +2,7 @@ import { Resend } from 'resend'
 import { CURSOS } from '@/lib/cursos'
 import supabaseAdmin from '@/lib/supabaseAdmin'
 import { buildWaLink, isValidWhatsapp } from '@/lib/whatsapp'
+import { validarCupon, calcularDescuento } from '@/lib/cupones'
 
 const FROM_EMAIL = 'Lashes Beauty Academy <inscripciones@lashesbeautyok.com>'
 
@@ -50,6 +51,63 @@ function row(label, value) {
     </tr>`
 }
 
+// Intenta guardar la alumna en Supabase, con un reintento si el primer intento falla.
+// Nunca lanza — devuelve true/false para que el caller decida si hace falta alertar.
+async function insertAlumnaConReintento(payload) {
+  for (let intento = 1; intento <= 2; intento++) {
+    try {
+      const { error } = await supabaseAdmin.from('alumnas').insert(payload)
+      if (!error) return true
+      console.error(`Error al guardar alumna en Supabase (intento ${intento}):`, error.message)
+    } catch (err) {
+      console.error(`Error al guardar alumna en Supabase (intento ${intento}):`, err?.message || err)
+    }
+    if (intento === 1) await new Promise(resolve => setTimeout(resolve, 1500))
+  }
+  return false
+}
+
+// Mail de alerta distinguible del aviso normal — se manda solo si los 2 intentos
+// de guardado en Supabase fallaron, para que la inscripción no se pierda en silencio.
+function buildAlertaHtml({ nombre, apellido, whatsapp, curso, grupo, kit }) {
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+</head>
+<body style="margin:0;padding:0;background:#f4f4f0;font-family:Inter,Arial,sans-serif;">
+<div style="max-width:560px;margin:0 auto;padding:32px 16px;">
+  <div style="background:#7f1d1d;border-radius:12px 12px 0 0;padding:24px 32px;text-align:center;">
+    <div style="font-size:18px;font-weight:700;color:#ffffff;letter-spacing:0.04em;">
+      ⚠ ALERTA — Inscripción no guardada en el panel
+    </div>
+  </div>
+  <div style="background:#1A1A1C;padding:28px 32px;">
+    <p style="font-size:13px;color:#ffffff;line-height:1.7;margin:0 0 20px;">
+      El mail de aviso de esta inscripción se mandó bien, pero no se pudo guardar en la
+      base de datos del panel (falló dos veces). Cargala a mano desde "Agregar alumna"
+      con estos datos:
+    </p>
+    <table style="width:100%;border-collapse:collapse;border-radius:8px;overflow:hidden;">
+      ${row('Nombre', nombre)}
+      ${row('Apellido', apellido)}
+      ${row('WhatsApp', whatsapp)}
+      ${row('Curso', curso)}
+      ${row('Grupo', grupo)}
+      ${row('Kit', kit ? 'Sí' : 'No')}
+    </table>
+  </div>
+  <div style="background:#0F0F10;border-radius:0 0 12px 12px;padding:16px 32px;text-align:center;border-top:0.5px solid #2C2C2F;">
+    <div style="font-size:11px;color:#555;letter-spacing:0.05em;">
+      Lashes Beauty Academy · lashesbeautyok.com
+    </div>
+  </div>
+</div>
+</body>
+</html>`
+}
+
 export async function POST(request) {
   const ip =
     request.headers.get('x-forwarded-for')?.split(',')[0] ||
@@ -82,6 +140,7 @@ export async function POST(request) {
     modalidad,
     metodoPago,
     kit,
+    cupon,
   } = body || {}
 
   // Validación: nombre, email, curso y whatsapp son obligatorios.
@@ -103,6 +162,12 @@ export async function POST(request) {
 
   const cursoData = CURSOS.find(c => c.nombre === String(curso ?? '').trim())
   const kitPrecio = kit && cursoData?.kit?.disponible ? cursoData.kit.precio : null
+
+  // Re-validación server-side del cupón — nunca confiar en si el cliente ya
+  // lo daba por válido. Un código inválido/vencido/manipulado se ignora en
+  // silencio: el cupón es un plus, no un requisito para completar la inscripción.
+  const cuponValidado = validarCupon(cupon, cursoData?.id)
+  const descuento = cuponValidado.ok ? calcularDescuento(cuponValidado.cupon, cursoData?.precio ?? 0) : 0
 
   // Derive edicion_id from the course + group selection
   let edicionId = null
@@ -241,28 +306,40 @@ export async function POST(request) {
       )
     }
 
-    try {
-      const precioKitDisponible = cursoData?.kit?.precio ?? null
-      await supabaseAdmin.from('alumnas').insert({
-        nombre,
-        apellido: apellido || null,
-        whatsapp,
-        edicion_id: edicionId,
-        curso_id: cursoData?.id || null,
-        grupo: grupo || null,
-        kit: !!kit,
-        notas: null,
-        origen: 'web',
-        fecha_inscripcion: new Date().toISOString().split('T')[0],
-        curso_finalizado: false,
-        // Freeze course data at inscription time
-        curso_nombre: cursoData?.nombre ?? null,
-        fecha_inicio: cursoData?.fechas ?? null,
-        precio: cursoData?.precio ?? null,
-        precio_kit_disponible: precioKitDisponible,
-        precio_kit: !!kit ? (precioKitDisponible ?? 0) : 0,
-      })
-    } catch {}
+    const precioKitDisponible = cursoData?.kit?.precio ?? null
+    const guardada = await insertAlumnaConReintento({
+      nombre,
+      apellido: apellido || null,
+      whatsapp,
+      edicion_id: edicionId,
+      curso_id: cursoData?.id || null,
+      grupo: grupo || null,
+      kit: !!kit,
+      notas: cuponValidado.ok ? `Cupón aplicado: ${cuponValidado.cupon.codigo}` : null,
+      descuento,
+      origen: 'web',
+      fecha_inscripcion: new Date().toISOString().split('T')[0],
+      curso_finalizado: false,
+      // Freeze course data at inscription time
+      curso_nombre: cursoData?.nombre ?? null,
+      fecha_inicio: cursoData?.fechas ?? null,
+      precio: cursoData?.precio ?? null,
+      precio_kit_disponible: precioKitDisponible,
+      precio_kit: !!kit ? (precioKitDisponible ?? 0) : 0,
+    })
+
+    if (!guardada) {
+      try {
+        await resend.emails.send({
+          from: FROM_EMAIL,
+          to: process.env.TO_EMAIL,
+          subject: 'ALERTA: inscripción no guardada en el panel',
+          html: buildAlertaHtml({ nombre, apellido, whatsapp, curso, grupo, kit }),
+        })
+      } catch (alertErr) {
+        console.error('No se pudo enviar el mail de alerta de inscripción no guardada:', alertErr?.message || alertErr)
+      }
+    }
 
     return Response.json({ ok: true, id: data?.id }, { status: 200 })
   } catch (err) {
