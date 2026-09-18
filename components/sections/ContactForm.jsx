@@ -313,17 +313,20 @@ export default function ContactForm({ preselectedCourse }) {
             <div className="success-icon">✓</div>
             <h3>¡Solicitud <em>enviada</em>!</h3>
             <p>
-              Recibimos tu pre-inscripción. Te contactamos en menos de 24hs por WhatsApp
-              para confirmar tu lugar y coordinar el pago.
+              {transferenciaDisponible
+                ? 'Recibimos tu pre-inscripción.'
+                : 'Recibimos tu pre-inscripción. Te contactamos en menos de 24hs por WhatsApp para confirmar tu lugar y coordinar el pago.'}
             </p>
             <div className="success-detail">
               <div className="sd-row"><span>Nombre</span><span>{`${nombre} ${apellido}`.trim() || '—'}</span></div>
               <div className="sd-row"><span>Curso</span><span>{curso || '—'}</span></div>
               <div className="sd-row"><span>Modalidad</span><span>{getModalidad(curso) || '—'}</span></div>
             </div>
-            <p className="success-note">
-              Revisá tu WhatsApp — te llegará confirmación dentro de las próximas horas.
-            </p>
+            {!transferenciaDisponible && (
+              <p className="success-note">
+                Revisá tu WhatsApp — te llegará confirmación dentro de las próximas horas.
+              </p>
+            )}
             {transferenciaDisponible && (
               <div className="transfer-block">
                 <h4>Un último paso para confirmar tu lugar</h4>
