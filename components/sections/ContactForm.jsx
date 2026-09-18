@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import PhoneInput from 'react-phone-number-input'
 import 'react-phone-number-input/style.css'
 import { CURSOS } from '@/lib/cursos'
-import { isValidWhatsapp } from '@/lib/whatsapp'
+import { isValidWhatsapp, buildWaLink } from '@/lib/whatsapp'
 import { Landmark, CreditCard, Banknote } from 'lucide-react'
 
 const PAY_LABELS = {
@@ -12,6 +12,23 @@ const PAY_LABELS = {
   bank: 'Transferencia',
   cash: 'Efectivo',
   paypal: 'PayPal',
+}
+
+// Mismo número que usa components/ui/WhatsAppFloat.jsx — mantenerlos
+// sincronizados si cambia. Con "+" adelante para que toDialableE164()
+// lo trate como E.164 ya armado (el string de WhatsAppFloat no lleva "+").
+const MICA_WHATSAPP = '+5491173657355'
+
+const DATOS_TRANSFERENCIA = {
+  activo: true, // apagador manual por si hay que sacarlo rápido
+  titular: 'Micaela Rocio Sala',
+  alias: 'micaelaasala.mp',
+  cvu: '0000003100035756324843', // CVU de Mercado Pago, no CBU bancario tradicional
+  plataforma: 'Mercado Pago',
+  cuit: '23401282874', // guardado por si hace falta a futuro — NO mostrar en
+                         // el cartel de la alumna, no hace falta para
+                         // transferir por alias/CVU y expone un dato
+                         // personal de Mica sin necesidad real
 }
 
 const PAYPAL_PATH = 'M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.291-.077.443-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.1zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.506l-.24 1.516a.56.56 0 0 0 .554.647h3.882c.46 0 .85-.334.922-.788.06-.26.76-4.852.816-5.09a.932.932 0 0 1 .923-.788h.58c3.76 0 6.705-1.528 7.565-5.946.36-1.847.174-3.388-.777-4.471z'
@@ -195,6 +212,20 @@ export default function ContactForm({ preselectedCourse }) {
   const cursoSoldOut = !!(curso && getCurso(curso)?.soldOut)
   const isOnline = getCurso(curso)?.modalidad === 'Online'
 
+  // Única fuente del total — usado tanto en el resumen del paso 3 como
+  // en el bloque de datos de transferencia post-envío, nunca recalculado.
+  const total = getCurso(curso)
+    ? getCurso(curso).precio + (kitSeleccionado && getCurso(curso)?.kit?.precio ? getCurso(curso).kit.precio : 0)
+    : 0
+
+  const transferenciaDisponible = isOnline && payMethod === 'bank'
+    && DATOS_TRANSFERENCIA.activo
+    && !!DATOS_TRANSFERENCIA.titular && !!DATOS_TRANSFERENCIA.alias && !!DATOS_TRANSFERENCIA.cvu
+
+  const waTransferLink = transferenciaDisponible
+    ? buildWaLink(MICA_WHATSAPP, `Hola Mica! Soy ${nombre}, terminé mi inscripción a ${curso} y te comparto el comprobante de la transferencia:`)
+    : null
+
   const sectionHeader = (
     <div className="sec-hd">
       <div className="tag tag-center">Inscripción</div>
@@ -224,6 +255,58 @@ export default function ContactForm({ preselectedCourse }) {
   if (submitted) {
     return (
       <section className="section" id="s-form">
+        <style>{`
+          .transfer-block {
+            background: rgba(247,168,184,0.06);
+            border: 1px solid rgba(247,168,184,0.3);
+            border-radius: 10px;
+            padding: 22px 24px;
+            max-width: 400px;
+            margin: 28px auto 0;
+            text-align: left;
+          }
+          .transfer-block h4 {
+            color: var(--pk);
+            font-size: 1rem;
+            margin: 0 0 10px;
+            text-align: center;
+          }
+          .transfer-block > p {
+            color: var(--mt);
+            font-size: .82rem;
+            line-height: 1.6;
+            margin: 0 0 16px;
+            text-align: center;
+          }
+          .transfer-block > p strong { color: var(--wh); }
+          .transfer-data {
+            background: var(--bk);
+            border: 1px solid var(--mg);
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+          }
+          .transfer-row { display: flex; justify-content: space-between; gap: 12px; font-size: .82rem; margin-bottom: 8px; }
+          .transfer-row:last-child { margin-bottom: 0; }
+          .transfer-row span:first-child { color: var(--mt); flex-shrink: 0; }
+          .transfer-row span:last-child { color: var(--wh); font-weight: 500; text-align: right; word-break: break-all; }
+          .transfer-wa-btn {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: center;
+            padding: 12px;
+            background: #25D366;
+            color: #fff;
+            font-family: var(--fb);
+            font-size: .85rem;
+            font-weight: 600;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: var(--tr);
+          }
+          .transfer-wa-btn:hover { opacity: .9; }
+        `}</style>
         {sectionHeader}
         <div className="form-wrap">
           <div className="success-screen">
@@ -241,6 +324,24 @@ export default function ContactForm({ preselectedCourse }) {
             <p className="success-note">
               Revisá tu WhatsApp — te llegará confirmación dentro de las próximas horas.
             </p>
+            {transferenciaDisponible && (
+              <div className="transfer-block">
+                <h4>Un último paso para confirmar tu lugar</h4>
+                <p>
+                  Transferí <strong>${total.toLocaleString('es-AR')}</strong> por {DATOS_TRANSFERENCIA.plataforma} a:
+                </p>
+                <div className="transfer-data">
+                  <div className="transfer-row"><span>Alias</span><span>{DATOS_TRANSFERENCIA.alias}</span></div>
+                  <div className="transfer-row"><span>Titular</span><span>{DATOS_TRANSFERENCIA.titular}</span></div>
+                  <div className="transfer-row"><span>CVU</span><span>{DATOS_TRANSFERENCIA.cvu}</span></div>
+                </div>
+                {waTransferLink && (
+                  <a className="transfer-wa-btn" href={waTransferLink} target="_blank" rel="noopener noreferrer">
+                    Enviar comprobante por WhatsApp
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -544,11 +645,7 @@ export default function ContactForm({ preselectedCourse }) {
                   <div className="summary-row"><span>Modalidad</span><span>{getModalidad(curso) || '—'}</span></div>
                   <div className="summary-row">
                     <span>Total</span>
-                    <span>
-                      {getCurso(curso)
-                        ? '$' + (getCurso(curso).precio + (kitSeleccionado && getCurso(curso)?.kit?.precio ? getCurso(curso).kit.precio : 0)).toLocaleString('es-AR')
-                        : '—'}
-                    </span>
+                    <span>{getCurso(curso) ? '$' + total.toLocaleString('es-AR') : '—'}</span>
                   </div>
                 </div>
                 <div className="cb">
