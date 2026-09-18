@@ -660,7 +660,6 @@ export default function ContactForm({ preselectedCourse }) {
                       <input
                         className="fc"
                         type="text"
-                        placeholder="Ej: TREND10"
                         value={cuponInput}
                         onChange={e => setCuponInput(e.target.value)}
                       />

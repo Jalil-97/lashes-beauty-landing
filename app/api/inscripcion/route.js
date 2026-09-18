@@ -6,6 +6,11 @@ import { validarCupon, calcularDescuento } from '@/lib/cupones'
 
 const FROM_EMAIL = 'Lashes Beauty Academy <inscripciones@lashesbeautyok.com>'
 
+// Mismo número que usa components/ui/WhatsAppFloat.jsx y
+// components/sections/ContactForm.jsx (MICA_WHATSAPP) — mantenerlos
+// sincronizados si cambia.
+const ACADEMIA_WHATSAPP = '+5491173657355'
+
 const rateLimit = new Map()
 
 function checkRateLimit(ip) {
@@ -106,6 +111,74 @@ function buildAlertaHtml({ nombre, apellido, whatsapp, curso, grupo, kit }) {
 </div>
 </body>
 </html>`
+}
+
+// Mail de confirmación a la alumna — sin precio ni detalle adicional del
+// curso, solo saludo + confirmación + botón de WhatsApp a la academia.
+function buildConfirmacionAlumnaHtml({ nombre, curso }) {
+  const waUrl = esc(
+    buildWaLink(ACADEMIA_WHATSAPP, `Hola! Soy ${nombre}, acabo de inscribirme a ${curso} y quería consultarles algo.`) || ''
+  )
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+</head>
+<body style="margin:0;padding:0;background:#f4f4f0;font-family:Inter,Arial,sans-serif;">
+<div style="max-width:560px;margin:0 auto;padding:32px 16px;">
+
+  <!-- Header -->
+  <div style="background:#0F0F10;border-radius:12px 12px 0 0;padding:28px 32px;text-align:center;">
+    <div style="font-family:Georgia,serif;font-size:20px;letter-spacing:0.04em;color:#ffffff;">
+      LASHES<span style="color:#F7A8B8;">.BEAUTY</span>
+    </div>
+    <div style="width:40px;height:1px;background:#F7A8B8;opacity:0.4;margin:14px auto 0;"></div>
+  </div>
+
+  <!-- Contenido -->
+  <div style="background:#1A1A1C;padding:32px;">
+    <div style="font-family:Georgia,serif;font-size:22px;color:#ffffff;margin-bottom:14px;">
+      ¡Hola ${esc(nombre)}!
+    </div>
+    <p style="font-size:14px;color:#A3A3A8;line-height:1.7;margin:0 0 24px;">
+      Recibimos tu pre-inscripción a <span style="color:#F7A8B8;">${esc(curso)}</span>. En breve nos
+      contactamos con vos por WhatsApp para confirmar tu lugar. Si querés escribirnos antes, hacelo
+      desde el botón de abajo.
+    </p>
+    <a href="${waUrl}"
+      style="display:block;background:#25D366;color:#ffffff;text-align:center;padding:14px;border-radius:8px;font-size:13px;font-weight:600;letter-spacing:0.06em;text-decoration:none;">
+      Escribirnos por WhatsApp →
+    </a>
+  </div>
+
+  <!-- Footer -->
+  <div style="background:#0F0F10;border-radius:0 0 12px 12px;padding:16px 32px;text-align:center;border-top:0.5px solid #2C2C2F;">
+    <div style="font-size:11px;color:#555;letter-spacing:0.05em;">
+      Lashes Beauty Academy · lashesbeautyok.com
+    </div>
+  </div>
+
+</div>
+</body>
+</html>`
+}
+
+// Manda el mail de confirmación a la alumna — nunca lanza y nunca devuelve
+// error al caller, para que un fallo acá no afecte la respuesta al formulario
+// ni dependa de si el mail a Mica o el guardado en Supabase funcionaron.
+async function enviarConfirmacionAlumna(resend, { nombre, email, curso }) {
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: email,
+      subject: 'Recibimos tu inscripción — Lashes Beauty Academy',
+      html: buildConfirmacionAlumnaHtml({ nombre, curso }),
+    })
+    if (error) console.error('Error al mandar el mail de confirmación a la alumna:', error.message)
+  } catch (err) {
+    console.error('Error al mandar el mail de confirmación a la alumna:', err?.message || err)
+  }
 }
 
 export async function POST(request) {
@@ -292,12 +365,19 @@ export async function POST(request) {
 
   try {
     const resend = new Resend(process.env.RESEND_API_KEY)
-    const { data, error } = await resend.emails.send({
-      from: FROM_EMAIL,
-      to: process.env.TO_EMAIL,
-      subject: `${curso} — ${nombre} ${apellido ?? ''}`.trim(),
-      html,
-    })
+
+    // Mail a Mica y mail de confirmación a la alumna van en paralelo — el
+    // segundo nunca lanza ni rechaza (ver enviarConfirmacionAlumna), así que
+    // no puede afectar este Promise.all ni demorar la respuesta al formulario.
+    const [{ data, error }] = await Promise.all([
+      resend.emails.send({
+        from: FROM_EMAIL,
+        to: process.env.TO_EMAIL,
+        subject: `${curso} — ${nombre} ${apellido ?? ''}`.trim(),
+        html,
+      }),
+      enviarConfirmacionAlumna(resend, { nombre, email, curso }),
+    ])
 
     if (error) {
       return Response.json(
