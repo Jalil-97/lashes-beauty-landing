@@ -394,6 +394,46 @@ export default function ContactForm({ preselectedCourse }) {
           font-size: .88rem;
         }
         .fc-phone-input::placeholder { color: var(--lg); }
+        .cupon-trigger {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          border: 1.5px dashed var(--pk);
+          background: rgba(247,168,184,.08);
+          border-radius: 8px;
+          padding: 12px 14px;
+          cursor: pointer;
+          transition: var(--tr);
+        }
+        .cupon-trigger:hover { background: rgba(247,168,184,.13); }
+        .cupon-trigger-icon {
+          flex-shrink: 0;
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          background: var(--pk);
+          color: var(--bk);
+          font-size: .8rem;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .cupon-trigger-text {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          flex: 1;
+        }
+        .cupon-trigger-title { color: var(--pk); font-weight: 600; font-size: .84rem; }
+        .cupon-trigger-sub { color: var(--mt); font-size: .74rem; }
+        .cupon-trigger-chevron {
+          flex-shrink: 0;
+          color: var(--pk);
+          font-size: 1.1rem;
+          transition: var(--tr);
+        }
+        .cupon-trigger-chevron.open { transform: rotate(90deg); }
       `}</style>
       {sectionHeader}
 
@@ -645,18 +685,23 @@ export default function ContactForm({ preselectedCourse }) {
                   {fieldError('payMethod')}
                 </div>
                 <div className="fg">
-                  {!cuponAbierto && (
-                    <button
-                      type="button"
-                      onClick={() => setCuponAbierto(true)}
-                      style={{ background: 'none', border: 'none', padding: 0, color: '#F7A8B8', fontSize: '.82rem', cursor: 'pointer', textDecoration: 'underline' }}
-                    >
-                      ¿Tenés un cupón?
-                    </button>
-                  )}
+                  <div
+                    className="cupon-trigger"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setCuponAbierto(o => !o)}
+                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCuponAbierto(o => !o) } }}
+                  >
+                    <div className="cupon-trigger-icon">%</div>
+                    <div className="cupon-trigger-text">
+                      <span className="cupon-trigger-title">¿Tenés un cupón de descuento?</span>
+                      <span className="cupon-trigger-sub">Tocá acá para ingresarlo</span>
+                    </div>
+                    <span className={`cupon-trigger-chevron${cuponAbierto ? ' open' : ''}`}>›</span>
+                  </div>
                   {cuponAbierto && (
                     <>
-                      <label>Código de cupón</label>
+                      <label style={{ marginTop: '12px' }}>Código de cupón</label>
                       <input
                         className="fc"
                         type="text"
