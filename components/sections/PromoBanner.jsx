@@ -5,10 +5,10 @@ import { CURSOS } from '@/lib/cursos'
 
 const PROMO = {
   activo: true,
-  cursoId: 'lash-duo',
+  cursoId: 'lash-trends',
   // Fecha tope para auto-ocultar (1 día antes del inicio real del curso).
-  // Verificado: lib/cursos.js sigue teniendo fechas: '19 de octubre'.
-  fechaLimiteISO: '2026-10-18',
+  // Verificado: lib/cursos.js tiene fechas: 'Viernes 6 de noviembre · 18hs'.
+  fechaLimiteISO: '2026-11-05',
   textoBoton: '¡Quiero inscribirme!',
 }
 
